@@ -21,6 +21,8 @@ public class FilmListActivity extends ListActivity {
 		ArrayList<String> data = getIntent().getStringArrayListExtra("data");
 		
 		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
+		
+		setResult(-1);
 	}
 
 	@Override

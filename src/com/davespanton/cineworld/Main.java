@@ -15,6 +15,7 @@ import moz.http.HttpRequest;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,22 +23,35 @@ import android.widget.TextView;
 
 public class Main extends Activity {
     
+	private Handler mHandler = new Handler();
+	
+	private Runnable mResults = new Runnable() {
+		public void run() {
+			Log.d("RUNNABLE", "run");
+			updateResults();
+		}
+	};
+	
 	private static final int VIEW_CINEMAS = 0;
 	private static final int VIEW_FILMS = 1;
 	
 	private static final int CINEMAS_RESULT = 0;
 	private static final int FILMS_RESULT = 1;
+	private static final int CINEMA_FILMS_RESULT = 2;
 	
 	private TextView mMainText;
 	
-	private HttpData mCinemaData;
-	private HttpData mFilmData;
+	private volatile HttpData mCinemaData;
+	private volatile HttpData mFilmData;
+	private volatile HttpData mCinemaFilmData;
 	
-	private JSONArray mCinema;
-	private JSONArray mFilm;
+	private volatile JSONArray mCinema;
+	private volatile JSONArray mFilm;
+	private volatile JSONArray mCinemaFilm;
 	
-	private ArrayList<String> mCinemaList;
-	private ArrayList<String> mFilmList;
+	private volatile ArrayList<String> mCinemaList;
+	private volatile ArrayList<String> mFilmList;
+	private volatile ArrayList<String> mCinemaFilmList;
 	
 	private JSONObject mCurrentCinema;
 	private JSONObject mCurrentFilm;
@@ -51,43 +65,50 @@ public class Main extends Activity {
         mMainText = (TextView) findViewById(R.id.main_text);
         
         //TODO move all this web-service stuff to a data provider sort of place.
-        mCinemaData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
-        mFilmData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true" );
-        
+        Thread requestThread = new Thread() {
+        	public void run() {
+        		mCinemaData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
+                mFilmData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true" );
+        		
+                JSONObject jsonObject = null;
+                try {
+        			jsonObject = (JSONObject) new JSONTokener(mCinemaData.content).nextValue();
+        			mCinema = jsonObject.getJSONArray("cinemas");
+        			mCinemaList = new ArrayList<String>();
+        			
+        			for( int i = 0; i < mCinema.length(); i++ ) {
+        				if(  mCinema.get(i) != null )
+        					mCinemaList.add(((JSONObject) mCinema.get(i)).getString("name"));
+        			}
+        		}
+                catch( JSONException e ) {
+                	Log.e("CineWorld", "error in cinema jsonObject", e);
+                }
+                
+                jsonObject = null;
+                try {
+                	
+        			jsonObject = (JSONObject) new JSONTokener(mFilmData.content).nextValue();
+        			mFilm = jsonObject.getJSONArray("films");
+        			mFilmList = new ArrayList<String>();
+        			
+        			for( int i = 0; i < mFilm.length(); i++ ) {
+        				if(  mFilm.get(i) != null )
+        					mFilmList.add(((JSONObject) mFilm.get(i)).getString("title"));
+        			}
+                }
+                catch( JSONException e ) {
+                	Log.e("CineWorld", "error in films jsonObject", e);
+                }
+                
+                
+                mHandler.post(mResults);
+        	}
+        };
         updateMainText();
+        requestThread.start();
         
-        JSONObject jsonObject = null;
-        try {
-			jsonObject = (JSONObject) new JSONTokener(mCinemaData.content).nextValue();
-			mCinema = jsonObject.getJSONArray("cinemas");
-			mCinemaList = new ArrayList<String>();
-			
-			for( int i = 0; i < mCinema.length(); i++ ) {
-				if(  mCinema.get(i) != null )
-					mCinemaList.add(((JSONObject) mCinema.get(i)).getString("name"));
-			}
-		}
-        catch( JSONException e ) {
-        	Log.e("CineWorld", "error in cinema jsonObject", e);
-        }
-        
-        jsonObject = null;
-        try {
-        	
-			jsonObject = (JSONObject) new JSONTokener(mFilmData.content).nextValue();
-			mFilm = jsonObject.getJSONArray("films");
-			mFilmList = new ArrayList<String>();
-			
-			for( int i = 0; i < mFilm.length(); i++ ) {
-				if(  mFilm.get(i) != null )
-					mFilmList.add(((JSONObject) mFilm.get(i)).getString("title"));
-			}
-        }
-        catch( JSONException e ) {
-        	Log.e("CineWorld", "error in films jsonObject", e);
-        }
-        
-        Log.d( "test", mCinemaData.content );
+       // Log.d( "test", mCinemaData.content );
     }
 
 	@Override
@@ -97,6 +118,8 @@ public class Main extends Activity {
 		
 		menu.add(0, VIEW_CINEMAS, 0, R.string.view_cinemas);
 		menu.add(0, VIEW_FILMS, 0, R.string.view_films);
+		
+		
 		
 		return result;
 	}
@@ -108,16 +131,33 @@ public class Main extends Activity {
 			case VIEW_CINEMAS:
 				Intent i = new Intent(this, CinemaListActivity.class);
 				i.putStringArrayListExtra("data", mCinemaList);
+				i.putExtra( "raw", mCinemaData.content);
 				startActivityForResult(i, CINEMAS_RESULT);
 				return true;
 			case VIEW_FILMS:
-				i = new Intent( this, FilmListActivity.class);
-				i.putStringArrayListExtra("data", mFilmList);
-				startActivityForResult(i, FILMS_RESULT);
+				startFilmActivity();
 				return true;
 		}
 		
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void startFilmActivity() {
+		Intent i = new Intent( this, FilmListActivity.class);
+		int request;
+		if( mCurrentCinema == null || mCinemaFilmList == null ) {
+			i.putStringArrayListExtra("data", mFilmList);
+			i.putExtra("raw", mFilmData.content);
+			request = FILMS_RESULT;
+		}
+		else {
+			i.putStringArrayListExtra("data", mCinemaFilmList);
+			i.putExtra("raw", mCinemaFilmData.content);
+			request = CINEMA_FILMS_RESULT;
+		}
+		
+		startActivityForResult(i, request);
+		
 	}
 
 	@Override
@@ -125,10 +165,14 @@ public class Main extends Activity {
 
 		super.onActivityResult(requestCode, resultCode, data);
 		
+		if( resultCode == -1 )
+			return;
+		
 		switch( requestCode ) {
 			case CINEMAS_RESULT:
 			try {
 				mCurrentCinema = mCinema.getJSONObject(resultCode);
+				updateFilmsForCinema( );
 				updateMainText();
 			} catch (JSONException e) {
 				e.printStackTrace();
@@ -142,7 +186,55 @@ public class Main extends Activity {
 				e.printStackTrace();
 			}
 				break; 
+			case CINEMA_FILMS_RESULT:
+			try{
+				mCurrentFilm = mCinemaFilm.getJSONObject(resultCode);
+				updateMainText();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			break;
 		}
+		
+	}
+	
+	private void updateFilmsForCinema( ) {
+		
+		Thread thread = new Thread() {
+			public void run() {
+				String id = "";
+				try {
+					id = mCurrentCinema.getString("id");
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				mCinemaFilmData = HttpRequest.get("https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id);
+			
+				try {
+					JSONObject obj = (JSONObject) new JSONTokener(mCinemaFilmData.content).nextValue();
+					mCinemaFilm = obj.getJSONArray("films");
+					mCinemaFilmList = new ArrayList<String>();
+					
+					for( int i = 0; i < mCinemaFilm.length(); i++ ) {
+        				if(  mCinemaFilm.get(i) != null )
+        					mCinemaFilmList.add(((JSONObject) mCinemaFilm.get(i)).getString("title"));
+        			}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		thread.start();
+		
+	}
+
+	private void updateResults() {
+		
+		updateMainText();
 		
 	}
 
@@ -153,25 +245,25 @@ public class Main extends Activity {
 		
 		if( mCurrentCinema != null ) {
 			try {
-				cinema = "Current cinema is: " + mCurrentCinema.getString("name");
+				cinema = getString(R.string.current_cinema) + mCurrentCinema.getString("name");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		else
-			cinema = "You have not selected a cinema";
+			cinema = getString(R.string.no_current_cinema);
 		
 		if( mCurrentFilm != null ) {
 			try {
-				film = "Current film is: " + mCurrentFilm.getString("title");
+				film = getString(R.string.current_film) + mCurrentFilm.getString("title");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block 
 				e.printStackTrace();
 			}
 		}
 		else
-			film = "You have not selected a film";
+			film = getString(R.string.no_current_film);
 		
 		
 		mMainText.setText( cinema + "\n" + film );
