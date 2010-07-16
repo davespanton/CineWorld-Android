@@ -9,6 +9,8 @@ import org.json.JSONTokener;
 
 import com.davespanton.cineworld.activities.CinemaListActivity;
 import com.davespanton.cineworld.activities.FilmListActivity;
+import com.davespanton.cineworld.data.Film;
+import com.davespanton.cineworld.data.FilmList;
 
 import moz.http.HttpData;
 import moz.http.HttpRequest;
@@ -53,6 +55,8 @@ public class Main extends Activity {
 	private volatile ArrayList<String> mFilmList;
 	private volatile ArrayList<String> mCinemaFilmList;
 	
+	private volatile FilmList mPFilmList;
+	
 	private JSONObject mCurrentCinema;
 	private JSONObject mCurrentFilm;
 	
@@ -66,7 +70,8 @@ public class Main extends Activity {
         
         //TODO move all this web-service stuff to a data provider sort of place.
         Thread requestThread = new Thread() {
-        	public void run() {
+        	
+			public void run() {
         		mCinemaData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
                 mFilmData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true" );
         		
@@ -91,17 +96,40 @@ public class Main extends Activity {
         			jsonObject = (JSONObject) new JSONTokener(mFilmData.content).nextValue();
         			mFilm = jsonObject.getJSONArray("films");
         			mFilmList = new ArrayList<String>();
+        			mPFilmList = new FilmList();
         			
         			for( int i = 0; i < mFilm.length(); i++ ) {
         				if(  mFilm.get(i) != null )
+        				{
         					mFilmList.add(((JSONObject) mFilm.get(i)).getString("title"));
+        					
+        					//TODO Validate each film item, and move this somewhere else
+        					Film f = new Film();
+        					
+        					if( ((JSONObject) mFilm.get(i)).has("title") )
+        						f.setTitle( ((JSONObject) mFilm.get(i)).getString("title") );
+        					if( ((JSONObject) mFilm.get(i)).has("classification") )
+        						f.setRating( ((JSONObject) mFilm.get(i)).getString("classification") );
+        					if( ((JSONObject) mFilm.get(i)).has("advisory") )
+        						f.setAdvisory( ((JSONObject) mFilm.get(i)).getString("advisory") );
+        					if( ((JSONObject) mFilm.get(i)).has("poster_url") )
+        						f.setPosterUrl( ((JSONObject) mFilm.get(i)).getString("poster_url") );
+        					if( ((JSONObject) mFilm.get(i)).has("still_url") )
+        						f.setStillUrl( ((JSONObject) mFilm.get(i)).getString("still_url") );
+        					if( ((JSONObject) mFilm.get(i)).has("film_url") )
+        						f.setFilmUrl( ((JSONObject) mFilm.get(i)).getString("film_url") );
+        					if( ((JSONObject) mFilm.get(i)).has("edi") )
+        						f.setEdi( ((JSONObject) mFilm.get(i)).getString("edi") );
+        					
+        					mPFilmList.add(f);
+        				}
         			}
+        		    				
                 }
                 catch( JSONException e ) {
                 	Log.e("CineWorld", "error in films jsonObject", e);
                 }
-                
-                
+                              
                 mHandler.post(mResults);
         	}
         };
@@ -119,8 +147,6 @@ public class Main extends Activity {
 		menu.add(0, VIEW_CINEMAS, 0, R.string.view_cinemas);
 		menu.add(0, VIEW_FILMS, 0, R.string.view_films);
 		
-		
-		
 		return result;
 	}
 
@@ -132,11 +158,14 @@ public class Main extends Activity {
 				Intent i = new Intent(this, CinemaListActivity.class);
 				i.putStringArrayListExtra("data", mCinemaList);
 				i.putExtra( "raw", mCinemaData.content);
+				
 				startActivityForResult(i, CINEMAS_RESULT);
 				return true;
 			case VIEW_FILMS:
 				startFilmActivity();
 				return true;
+
+			
 		}
 		
 		return super.onOptionsItemSelected(item);
@@ -148,6 +177,12 @@ public class Main extends Activity {
 		if( mCurrentCinema == null || mCinemaFilmList == null ) {
 			i.putStringArrayListExtra("data", mFilmList);
 			i.putExtra("raw", mFilmData.content);
+			
+			Bundle b = new Bundle();
+			b.putParcelable("films", mPFilmList);
+			
+			i.putExtra("films", b);
+			
 			request = FILMS_RESULT;
 		}
 		else {

@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
 
@@ -29,7 +30,7 @@ public class CinemaListActivity extends ListActivity {
 	
 	public static final int INFO_DIALOG = 0;
 	
-	public String mSelected;
+	private int mSelectedIndex;
 	
 	private JSONArray rawData;
 	
@@ -43,6 +44,7 @@ public class CinemaListActivity extends ListActivity {
 		
 		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
 		
+		//TODO tidy up
 		try {
 			rawData = (JSONArray) ((JSONObject) new JSONTokener(getIntent().getStringExtra("raw")).nextValue()).getJSONArray("cinemas");
 		} catch (JSONException e) {
@@ -70,6 +72,7 @@ public class CinemaListActivity extends ListActivity {
 		
 		super.onCreateContextMenu(menu, v, menuInfo);
 		
+		mSelectedIndex = (int) ((AdapterContextMenuInfo) menuInfo).id;
 		menu.add(0, CONTEXT_VIEW_INFO, 0, R.string.view_info);
 	}
 
@@ -79,8 +82,7 @@ public class CinemaListActivity extends ListActivity {
 		
 		switch( item.getItemId() ) {
 			case CONTEXT_VIEW_INFO:
-				mSelected = (String) item.getTitle();
-				showDialog(INFO_DIALOG);
+				showDialog(mSelectedIndex);
 			return true;
 		}
 		
@@ -90,9 +92,25 @@ public class CinemaListActivity extends ListActivity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		super.onCreateDialog(id);
+		
+		String message = "";
+		String title = "";
+		try {
+			title = rawData.getJSONObject(mSelectedIndex).getString("name");
+			
+			message += rawData.getJSONObject(mSelectedIndex).getString("address");
+			message += ", ";
+			message += rawData.getJSONObject(mSelectedIndex).getString("postcode");
+			message += "\n\nTel: ";
+			message += rawData.getJSONObject(mSelectedIndex).getString("telephone");
+		} catch (JSONException e) {
+			message = "There was an error retrieving cinema information.";
+			e.printStackTrace();
+		}
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(mSelected)
-		.setMessage("this is a message about something")
+		builder.setTitle(title)
+		.setMessage( message )
 		.setNeutralButton(getString(R.string.okay), new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
