@@ -65,13 +65,13 @@ public class FilmList extends ArrayList<Film> implements Parcelable {
 		for( int i = 0; i < size; i++ ){
 			Film f = new Film();
 			
-			f.setEdi(in.readString());
-			f.setFilmUrl(in.readString());
-			f.setStillUrl(in.readString());
-			f.setPosterUrl(in.readString());
-			f.setAdvisory(in.readString());
-			f.setRating(in.readString());
 			f.setTitle(in.readString());
+			f.setRating(in.readString());
+			f.setAdvisory(in.readString());
+			f.setPosterUrl(in.readString());
+			f.setStillUrl(in.readString());
+			f.setFilmUrl(in.readString());
+			f.setEdi(in.readString());
 			
 			this.add(f);
 		}

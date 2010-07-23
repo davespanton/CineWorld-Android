@@ -29,7 +29,6 @@ public class Main extends Activity {
 	
 	private Runnable mResults = new Runnable() {
 		public void run() {
-			Log.d("RUNNABLE", "run");
 			updateResults();
 		}
 	};
@@ -56,6 +55,7 @@ public class Main extends Activity {
 	private volatile ArrayList<String> mCinemaFilmList;
 	
 	private volatile FilmList mPFilmList;
+	private volatile FilmList mPCinemaFilmList;
 	
 	private JSONObject mCurrentCinema;
 	private JSONObject mCurrentFilm;
@@ -101,27 +101,11 @@ public class Main extends Activity {
         			for( int i = 0; i < mFilm.length(); i++ ) {
         				if(  mFilm.get(i) != null )
         				{
-        					mFilmList.add(((JSONObject) mFilm.get(i)).getString("title"));
-        					
-        					//TODO Validate each film item, and move this somewhere else
-        					Film f = new Film();
-        					
-        					if( ((JSONObject) mFilm.get(i)).has("title") )
-        						f.setTitle( ((JSONObject) mFilm.get(i)).getString("title") );
-        					if( ((JSONObject) mFilm.get(i)).has("classification") )
-        						f.setRating( ((JSONObject) mFilm.get(i)).getString("classification") );
-        					if( ((JSONObject) mFilm.get(i)).has("advisory") )
-        						f.setAdvisory( ((JSONObject) mFilm.get(i)).getString("advisory") );
-        					if( ((JSONObject) mFilm.get(i)).has("poster_url") )
-        						f.setPosterUrl( ((JSONObject) mFilm.get(i)).getString("poster_url") );
-        					if( ((JSONObject) mFilm.get(i)).has("still_url") )
-        						f.setStillUrl( ((JSONObject) mFilm.get(i)).getString("still_url") );
-        					if( ((JSONObject) mFilm.get(i)).has("film_url") )
-        						f.setFilmUrl( ((JSONObject) mFilm.get(i)).getString("film_url") );
-        					if( ((JSONObject) mFilm.get(i)).has("edi") )
-        						f.setEdi( ((JSONObject) mFilm.get(i)).getString("edi") );
-        					
-        					mPFilmList.add(f);
+        					Film f = getFilmFromJSONObject(mFilm.getJSONObject(i));
+        					if( f.validate()) {
+        						mPFilmList.add( f );
+        						mFilmList.add(((JSONObject) mFilm.get(i)).getString("title"));
+        					}
         				}
         			}
         		    				
@@ -164,8 +148,6 @@ public class Main extends Activity {
 			case VIEW_FILMS:
 				startFilmActivity();
 				return true;
-
-			
 		}
 		
 		return super.onOptionsItemSelected(item);
@@ -173,21 +155,21 @@ public class Main extends Activity {
 
 	private void startFilmActivity() {
 		Intent i = new Intent( this, FilmListActivity.class);
+		Bundle b = new Bundle();
 		int request;
 		if( mCurrentCinema == null || mCinemaFilmList == null ) {
 			i.putStringArrayListExtra("data", mFilmList);
-			i.putExtra("raw", mFilmData.content);
 			
-			Bundle b = new Bundle();
 			b.putParcelable("films", mPFilmList);
-			
 			i.putExtra("films", b);
 			
 			request = FILMS_RESULT;
 		}
 		else {
 			i.putStringArrayListExtra("data", mCinemaFilmList);
-			i.putExtra("raw", mCinemaFilmData.content);
+			//i.putExtra("raw", mCinemaFilmData.content);
+			b.putParcelable("films", mPCinemaFilmList);
+			i.putExtra("films", b);
 			request = CINEMA_FILMS_RESULT;
 		}
 		
@@ -251,10 +233,16 @@ public class Main extends Activity {
 					JSONObject obj = (JSONObject) new JSONTokener(mCinemaFilmData.content).nextValue();
 					mCinemaFilm = obj.getJSONArray("films");
 					mCinemaFilmList = new ArrayList<String>();
-					
+					mPCinemaFilmList = new FilmList();
 					for( int i = 0; i < mCinemaFilm.length(); i++ ) {
         				if(  mCinemaFilm.get(i) != null )
-        					mCinemaFilmList.add(((JSONObject) mCinemaFilm.get(i)).getString("title"));
+        				{
+        					Film f = getFilmFromJSONObject(mCinemaFilm.getJSONObject(i));
+        					if( f.validate() ) {
+        						mPCinemaFilmList.add( f );
+        						mCinemaFilmList.add(((JSONObject) mCinemaFilm.get(i)).getString("title"));
+        					}
+        				}
         			}
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
@@ -303,6 +291,33 @@ public class Main extends Activity {
 		
 		mMainText.setText( cinema + "\n" + film );
 		
+	}
+	
+	private Film getFilmFromJSONObject( JSONObject jsonObject ) {
+		
+		Film f = new Film();
+		
+		try {
+			if( jsonObject.has("title") )
+				f.setTitle( jsonObject.getString("title") );
+			if( jsonObject.has("classification") )
+				f.setRating( jsonObject.getString("classification") );
+			if( jsonObject.has("advisory") )
+				f.setAdvisory( jsonObject.getString("advisory") );
+			if( jsonObject.has("poster_url") )
+				f.setPosterUrl( jsonObject.getString("poster_url") );
+			if( jsonObject.has("still_url") )
+				f.setStillUrl( jsonObject.getString("still_url") );
+			if( jsonObject.has("film_url") )
+				f.setFilmUrl( jsonObject.getString("film_url") );
+			if( jsonObject.has("edi") )
+				f.setEdi( jsonObject.getString("edi") );
+		}
+		catch( JSONException error ) {
+			//TODO something
+		}
+		
+		return f;
 	}
     
 }

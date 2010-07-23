@@ -71,6 +71,15 @@ public class Film {
 		return edi;
 	}
 
-	
+	public boolean validate(){
+		
+		if( title != null && rating != null && posterUrl != null
+				&& stillUrl != null && filmUrl != null && edi != null ) {
+			return true;
+		}
+		else
+			return false;
+		
+	}
 	
 }

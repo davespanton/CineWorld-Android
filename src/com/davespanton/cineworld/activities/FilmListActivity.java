@@ -2,11 +2,6 @@ package com.davespanton.cineworld.activities;
 
 import java.util.ArrayList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +14,7 @@ import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 
 public class FilmListActivity extends ListActivity {
@@ -27,7 +23,7 @@ public class FilmListActivity extends ListActivity {
 	
 	private int mSelectedIndex;
 
-	private JSONArray rawData;
+	private FilmList mFilmList;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,19 +33,10 @@ public class FilmListActivity extends ListActivity {
 		
 		ArrayList<String> data = getIntent().getStringArrayListExtra("data");
 		
-		//TODO something useful with this :) Its a work in progress at the moment
 		Bundle b = getIntent().getBundleExtra("films");
-		FilmList f = b.getParcelable("films");
+		mFilmList = b.getParcelable("films");
 		
 		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
-		
-		//TODO tidy up
-		try {
-			rawData = (JSONArray) ((JSONObject) new JSONTokener(getIntent().getStringExtra("raw")).nextValue()).getJSONArray("films");
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 		setResult(-1);
 		
@@ -73,16 +60,13 @@ public class FilmListActivity extends ListActivity {
 		switch( item.getItemId() ) {
 			case CONTEXT_VIEW_INFO:
 				Intent i = new Intent(this, FilmDetailsActivity.class);
-				try {
-					JSONObject film = (JSONObject) rawData.get(mSelectedIndex);
-					i.putExtra( "poster_url", film.getString("poster_url"));
-					i.putExtra( "title", film.getString("title"));
-					i.putExtra( "rating", film.getString("classification"));
-					i.putExtra( "advisory", film.getString("advisory"));
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				
+				Film f = mFilmList.get(mSelectedIndex);
+				i.putExtra( "poster_url", f.getPosterUrl() );
+				i.putExtra( "title", f.getTitle() );
+				i.putExtra( "rating", f.getRating() );
+				i.putExtra( "advisory", f.getAdvisory() );
+				
 				startActivity(i);
 				return true;
 		}
