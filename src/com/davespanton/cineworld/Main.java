@@ -108,8 +108,7 @@ public class Main extends Activity {
         					}
         				}
         			}
-        		    				
-                }
+        		}
                 catch( JSONException e ) {
                 	Log.e("CineWorld", "error in films jsonObject", e);
                 }
@@ -119,8 +118,6 @@ public class Main extends Activity {
         };
         updateMainText();
         requestThread.start();
-        
-       // Log.d( "test", mCinemaData.content );
     }
 
 	@Override
@@ -167,9 +164,10 @@ public class Main extends Activity {
 		}
 		else {
 			i.putStringArrayListExtra("data", mCinemaFilmList);
-			//i.putExtra("raw", mCinemaFilmData.content);
+			
 			b.putParcelable("films", mPCinemaFilmList);
 			i.putExtra("films", b);
+			
 			request = CINEMA_FILMS_RESULT;
 		}
 		
