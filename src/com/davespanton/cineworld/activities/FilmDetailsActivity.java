@@ -39,9 +39,8 @@ public class FilmDetailsActivity extends Activity {
 		advisory.setText( getIntent().getStringExtra("advisory"));
 	}
 	
-	/* 
-	 * Thanks to Agus Santoso: http://asantoso.wordpress.com/2008/03/07/download-and-view-image-from-the-web/
-	 */
+	
+	// Thanks to Agus Santoso: http://asantoso.wordpress.com/2008/03/07/download-and-view-image-from-the-web/
 	private Drawable ImageOperations(Context ctx, String url, String saveFilename) {
 		try {
 			InputStream is = (InputStream) this.fetch(url);
