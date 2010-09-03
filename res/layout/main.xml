@@ -4,10 +4,22 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
+    
+<ImageView
+	android:src="@drawable/cineworld_logo_200x100"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal"
+	/>
+
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	/>
+
 <TextView  
     android:id="@+id/main_text"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
-    
     />
 </LinearLayout>
