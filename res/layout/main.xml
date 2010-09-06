@@ -15,11 +15,37 @@
 <View 
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	/>
+
+<Button
+	android:text="@string/view_cinemas"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal"
+	android:paddingLeft="20px"
+	android:paddingRight="20px"
+	/>
+	
+<Button
+	android:text="@string/view_films"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal"
+	android:paddingLeft="20px"
+	android:paddingRight="20px"
 	/>
 
 <TextView  
     android:id="@+id/main_text"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
+    android:layout_gravity="center_horizontal"
     />
+    
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	/>
 </LinearLayout>
