@@ -21,6 +21,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class Main extends Activity {
@@ -41,6 +44,8 @@ public class Main extends Activity {
 	private static final int CINEMA_FILMS_RESULT = 2;
 	
 	private TextView mMainText;
+	private Button mCinemaButton;
+	private Button mFilmButton;
 	
 	private volatile HttpData mCinemaData;
 	private volatile HttpData mFilmData;
@@ -67,6 +72,18 @@ public class Main extends Activity {
         setContentView(R.layout.main);
         
         mMainText = (TextView) findViewById(R.id.main_text);
+        mCinemaButton = (Button) findViewById(R.id.cinema_button);
+        mFilmButton = (Button) findViewById(R.id.film_button);
+        
+        mCinemaButton.setOnClickListener( new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				
+			}
+		
+        });
         
         //TODO move all this web-service stuff to a data provider sort of place.
         Thread requestThread = new Thread() {
