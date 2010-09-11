@@ -4,10 +4,64 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<TextView  
+    
+<ImageView
+	android:src="@drawable/cineworld_logo_200x100"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal"
+	/>
+
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	/>
+
+<Button
+	android:id="@+id/cinema_button"
+	android:text="@string/view_cinemas"
+	android:layout_width="fill_parent"
+	android:layout_height="50px"
+	android:layout_gravity="center_horizontal"
+	android:paddingLeft="20px"
+	android:paddingRight="20px"
+	style="@style/Button"
+	/>
+
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="10px"
+	/>
+
+<Button
+	android:id="@+id/film_button"
+	android:text="@string/view_films"
+	android:layout_width="fill_parent"
+	android:layout_height="50px"
+	android:layout_gravity="center_horizontal"
+	android:paddingLeft="20px"
+	android:paddingRight="20px"
+	android:paddingBottom="5px"
+	style="@style/Button"
+	/>
+
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	/>
+	
+<TextView
     android:id="@+id/main_text"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
-    
+    android:layout_gravity="center_horizontal"
     />
+    
+<View 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	/>
 </LinearLayout>
