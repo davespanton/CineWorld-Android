@@ -11,13 +11,17 @@ import com.davespanton.cineworld.activities.CinemaListActivity;
 import com.davespanton.cineworld.activities.FilmListActivity;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
+import com.davespanton.cineworld.services.CineWorldService;
 
 import moz.http.HttpData;
 import moz.http.HttpRequest;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,6 +69,8 @@ public class Main extends Activity {
 	private JSONObject mCurrentCinema;
 	private JSONObject mCurrentFilm;
 	
+	private CineWorldService cineWorldService;
+	
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -85,8 +91,8 @@ public class Main extends Activity {
 		
         });
         
-        //TODO move all this web-service stuff to a data provider sort of place.
-        Thread requestThread = new Thread() {
+        
+        /*Thread requestThread = new Thread() {
         	
 			public void run() {
         		mCinemaData = HttpRequest.get( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
@@ -134,7 +140,22 @@ public class Main extends Activity {
         	}
         };
         updateMainText();
-        requestThread.start();
+        requestThread.start();*/
+        
+        bindService( new Intent(this, CineWorldService.class), new ServiceConnection() {
+			
+			@Override
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				cineWorldService = ((CineWorldService.LocalBinder)service).getService();
+				Log.d("Main", "connected to service");
+			}
+			
+			@Override
+			public void onServiceDisconnected(ComponentName name) {
+				cineWorldService = null;
+			}
+			
+		}, BIND_AUTO_CREATE);
     }
 
 	@Override
