@@ -2,18 +2,12 @@ package com.davespanton.cineworld.activities;
 
 import java.util.ArrayList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,6 +17,7 @@ import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.data.CinemaList;
 
 public class CinemaListActivity extends ListActivity {
 
@@ -32,7 +27,9 @@ public class CinemaListActivity extends ListActivity {
 	
 	private int mSelectedIndex;
 	
-	private JSONArray rawData;
+	
+	
+	private CinemaList mCinemaList;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,13 +41,8 @@ public class CinemaListActivity extends ListActivity {
 		
 		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
 		
-		//TODO tidy up
-		try {
-			rawData = (JSONArray) ((JSONObject) new JSONTokener(getIntent().getStringExtra("raw")).nextValue()).getJSONArray("cinemas");
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Bundle b = getIntent().getBundleExtra("cinemas");
+		mCinemaList = b.getParcelable("cinemas");
 		
 		setResult( -1 );
 		
@@ -95,18 +87,15 @@ public class CinemaListActivity extends ListActivity {
 		
 		String message = "";
 		String title = "";
-		try {
-			title = rawData.getJSONObject(mSelectedIndex).getString("name");
+		
+		title = mCinemaList.get(mSelectedIndex).getName();
 			
-			message += rawData.getJSONObject(mSelectedIndex).getString("address");
-			message += ", ";
-			message += rawData.getJSONObject(mSelectedIndex).getString("postcode");
-			message += "\n\nTel: ";
-			message += rawData.getJSONObject(mSelectedIndex).getString("telephone");
-		} catch (JSONException e) {
-			message = "There was an error retrieving cinema information.";
-			e.printStackTrace();
-		}
+		message += mCinemaList.get(mSelectedIndex).getAddress();
+		message += ", ";
+		message += mCinemaList.get(mSelectedIndex).getPostcode();
+		message += "\n\nTel: ";
+		message += mCinemaList.get(mSelectedIndex).getTelephone();
+		
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(title)

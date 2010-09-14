@@ -11,6 +11,8 @@ import moz.http.HttpData;
 import moz.http.HttpRequest;
 
 import com.davespanton.cineworld.ApiKey;
+import com.davespanton.cineworld.data.Cinema;
+import com.davespanton.cineworld.data.CinemaList;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 
@@ -29,17 +31,20 @@ public class CineWorldService extends Service {
 	
 	private JSONArray mCinemas;
 	private ArrayList<String> mCinemaData;
+	private CinemaList mPCinemaData;
+	
 	private JSONArray mFilms;
 	private ArrayList<String> mFilmData;
 	private FilmList mPFilmData;
+	
 	private JSONArray mCinemaFilms;
 	private ArrayList<String> mCinemaFilmData;
 	private FilmList mPCinemaFilmData;
 	
-	private JSONObject mCurrentCinema;
+	private Cinema mCurrentCinema;
 	
-	public JSONArray getCinemaList() {
-		return mCinemas;
+	public CinemaList getCinemaList() {
+		return mPCinemaData;
 	}
 	
 	public ArrayList<String> getCinemaNames() {
@@ -62,15 +67,15 @@ public class CineWorldService extends Service {
 		return mCinemaFilmData;
 	}
 	
-	public JSONObject getCurrentCinema() {
+	public Cinema getCurrentCinema() {
 		return mCurrentCinema;
 	}
 	
-	public void setCurrentCinema( JSONObject cinema ) {
-		if( cinema == mCurrentCinema )
+	public void setCurrentCinema( int index ) {
+		if( mPCinemaData.get(index) == mCurrentCinema || index > (mPCinemaData.size()-1) )
 			return;
 		
-		mCurrentCinema = cinema;
+		mCurrentCinema = mPCinemaData.get(index);
 		
 		updateFilmsForCinema();
 	}
@@ -114,10 +119,14 @@ public class CineWorldService extends Service {
         			jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
         			mCinemas = jsonObject.getJSONArray("cinemas");
         			mCinemaData = new ArrayList<String>();
+        			mPCinemaData = new CinemaList();
         			
         			for( int i = 0; i < mCinemas.length(); i++ ) {
-        				if(  mCinemas.get(i) != null )
+        				Cinema c = getCinemaFromJSONObject(mCinemas.getJSONObject(i));
+        				if(  mCinemas.get(i) != null ) {
+        					mPCinemaData.add(c);
         					mCinemaData.add(((JSONObject) mCinemas.get(i)).getString("name"));
+        				}
         			}
         		}
                 catch( JSONException e ) {
@@ -177,13 +186,7 @@ public class CineWorldService extends Service {
 	}
 	
 	private void updateFilmsForCinema() {
-		String id = "";
-		try {
-			id = mCurrentCinema.getString("id");
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		String id = mCurrentCinema.getId();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
@@ -215,6 +218,28 @@ public class CineWorldService extends Service {
 		}
 		
 		return f;
+	}
+	
+	private Cinema getCinemaFromJSONObject( JSONObject jsonObject ) {
+		Cinema c = new Cinema();
+		
+		try {
+			if( jsonObject.has("name"))
+				c.setName( jsonObject.getString("name") );
+			if( jsonObject.has("address"))
+				c.setAddress( jsonObject.getString("address") );
+			if( jsonObject.has("postcode"))
+				c.setPostcode( jsonObject.getString("postcode") );
+			if( jsonObject.has("telephone"))
+				c.setTelephone( jsonObject.getString("telephone") );
+			if( jsonObject.has("id"))
+				c.setId( jsonObject.getString("id") );
+		}
+		catch( JSONException error ) {
+			//TODO more validation
+		}
+		
+		return c;
 	}
 
 	public class LocalBinder extends Binder {

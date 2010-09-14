@@ -72,14 +72,8 @@ public class Film {
 	}
 
 	public boolean validate(){
-		
-		if( title != null && rating != null && posterUrl != null
-				&& stillUrl != null && filmUrl != null && edi != null ) {
-			return true;
-		}
-		else
-			return false;
-		
+		return( title != null && rating != null && posterUrl != null
+				&& stillUrl != null && filmUrl != null && edi != null );
 	}
 	
 }
