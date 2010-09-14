@@ -85,8 +85,16 @@ public class Main extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				
+				startCinemaActivity();
+			}
+		
+        });
+        
+        mFilmButton.setOnClickListener( new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				startFilmActivity();
 			}
 		
         });
@@ -174,11 +182,7 @@ public class Main extends Activity {
 		
 		switch( item.getItemId() ) {
 			case VIEW_CINEMAS:
-				Intent i = new Intent(this, CinemaListActivity.class);
-				i.putStringArrayListExtra("data", mCinemaList);
-				i.putExtra( "raw", mCinemaData.content);
-				
-				startActivityForResult(i, CINEMAS_RESULT);
+				startCinemaActivity();
 				return true;
 			case VIEW_FILMS:
 				startFilmActivity();
@@ -187,7 +191,15 @@ public class Main extends Activity {
 		
 		return super.onOptionsItemSelected(item);
 	}
-
+	
+	private void startCinemaActivity() {
+		Intent i = new Intent(this, CinemaListActivity.class);
+		i.putStringArrayListExtra("data", mCinemaList);
+		i.putExtra( "raw", mCinemaData.content);
+		
+		startActivityForResult(i, CINEMAS_RESULT);
+	}
+	
 	private void startFilmActivity() {
 		Intent i = new Intent( this, FilmListActivity.class);
 		Bundle b = new Bundle();
@@ -227,6 +239,7 @@ public class Main extends Activity {
 				mCurrentCinema = mCinema.getJSONObject(resultCode);
 				updateFilmsForCinema( );
 				updateMainText();
+				startFilmActivity();
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}	
