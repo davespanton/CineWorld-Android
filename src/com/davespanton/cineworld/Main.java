@@ -34,10 +34,7 @@ public class Main extends Activity {
 	private TextView mMainText;
 	private Button mCinemaButton;
 	private Button mFilmButton;
-	
-	private volatile JSONArray mFilm;
-	private volatile JSONArray mCinemaFilm;
-	
+		
 	private CineWorldService cineWorldService;
 	
 	/** Called when the activity is first created. */
@@ -106,12 +103,6 @@ public class Main extends Activity {
 	
 	private void startCinemaActivity() {
 		Intent i = new Intent(this, CinemaListActivity.class);
-		Bundle b = new Bundle();
-		
-		i.putStringArrayListExtra("data", cineWorldService.getCinemaNames());
-		b.putParcelable("cinemas", cineWorldService.getCinemaList() );
-		i.putExtra("cinemas", b);
-		
 		startActivityForResult(i, CINEMAS_RESULT);
 	}
 	
@@ -120,18 +111,14 @@ public class Main extends Activity {
 		Bundle b = new Bundle();
 		int request;
 		if( cineWorldService.getCurrentCinema() == null || cineWorldService.getFilmNamesForCurrentCinema() == null ) {
-			i.putStringArrayListExtra( "data", cineWorldService.getFilmNames() );
 			
-			b.putParcelable( "films", cineWorldService.getFilmList() );
-			i.putExtra( "films", b );
+			i.putExtra( "type", FilmListActivity.Types.ALL );
 			
 			request = FILMS_RESULT; 
 		}
 		else {
-			i.putStringArrayListExtra( "data", cineWorldService.getFilmNamesForCurrentCinema() );
 			
-			b.putParcelable( "films", cineWorldService.getFilmListForCurrentCinema() );
-			i.putExtra("films", b);
+			i.putExtra( "type", FilmListActivity.Types.CINEMA );
 			
 			request = CINEMA_FILMS_RESULT;
 		}

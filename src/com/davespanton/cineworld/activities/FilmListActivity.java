@@ -3,8 +3,12 @@ package com.davespanton.cineworld.activities;
 import java.util.ArrayList;
 
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,31 +20,64 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
+import com.davespanton.cineworld.services.CineWorldService;
 
 public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
 	
+	public enum Types { ALL, CINEMA };
+	
 	private int mSelectedIndex;
 
 	private FilmList mFilmList;
-
+	
+	private CineWorldService cineWorldService;
+	
+	private Types type = Types.ALL;
+	
+	public void onConnected() {
+		
+		ArrayList<String> data = null;
+		
+		switch( type )
+		{
+			case ALL:
+				data = cineWorldService.getFilmNames();
+				mFilmList = cineWorldService.getFilmList();
+				break;
+			
+			// TODO needs a loader in here (or somewhere) so this information is up-to-date. 
+			case CINEMA:
+				data = cineWorldService.getFilmNamesForCurrentCinema();
+				mFilmList = cineWorldService.getFilmListForCurrentCinema();
+				break;
+		}
+		
+		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
+		registerForContextMenu( getListView() );
+		
+		Log.d( "FilmListActivity", type.toString() );
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.films);
 		
-		ArrayList<String> data = getIntent().getStringArrayListExtra("data");
+		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
 		
-		Bundle b = getIntent().getBundleExtra("films");
-		mFilmList = b.getParcelable("films");
-		
-		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
+		type = (Types) getIntent().getSerializableExtra("type");
 		
 		setResult(-1);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
 		
-		registerForContextMenu( getListView() );
+		unbindService(service);
 	}
 	
 	@Override
@@ -83,5 +120,20 @@ public class FilmListActivity extends ListActivity {
 		setResult(position);
 		finish();
 	}
+	
+	private ServiceConnection service = new ServiceConnection() {
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			cineWorldService = ((CineWorldService.LocalBinder)service).getService();
+			onConnected();
+		}
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			cineWorldService = null;
+		}
+		
+	};
 
 }

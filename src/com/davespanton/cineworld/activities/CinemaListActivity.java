@@ -1,13 +1,15 @@
 package com.davespanton.cineworld.activities;
 
-import java.util.ArrayList;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +20,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.CinemaList;
+import com.davespanton.cineworld.services.CineWorldService;
 
 public class CinemaListActivity extends ListActivity {
 
@@ -27,9 +30,21 @@ public class CinemaListActivity extends ListActivity {
 	
 	private int mSelectedIndex;
 	
-	
+	private CineWorldService cineWorldService;
 	
 	private CinemaList mCinemaList;
+	
+	public void onConnected() {
+		
+		setListAdapter( new ArrayAdapter<String>( 
+				this, 
+				R.layout.list_layout, 
+				cineWorldService.getCinemaNames()));
+		
+		mCinemaList = cineWorldService.getCinemaList();
+		
+		registerForContextMenu(getListView());
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,16 +52,16 @@ public class CinemaListActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.cinema);
 		
-		ArrayList<String> data = getIntent().getStringArrayListExtra("data");
-		
-		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
-		
-		Bundle b = getIntent().getBundleExtra("cinemas");
-		mCinemaList = b.getParcelable("cinemas");
+		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
 		
 		setResult( -1 );
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
 		
-		registerForContextMenu(getListView());
+		unbindService(service);
 	}
 
 	@Override
@@ -112,5 +127,19 @@ public class CinemaListActivity extends ListActivity {
 	}
 	
 	
+	
+	private ServiceConnection service = new ServiceConnection() {
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			cineWorldService = ((CineWorldService.LocalBinder)service).getService();
+			onConnected();
+		}
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			cineWorldService = null;
+		}
+	};
 	
 }
