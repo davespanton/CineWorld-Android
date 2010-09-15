@@ -25,6 +25,8 @@ import android.util.Log;
 
 public class CineWorldService extends Service {
 	
+	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
+	
 	private final Binder binder = new LocalBinder();
 	
 	public enum Ids { FILM, CINEMA, CINEMA_FILM };
@@ -42,6 +44,9 @@ public class CineWorldService extends Service {
 	private FilmList mPCinemaFilmData;
 	
 	private Cinema mCurrentCinema;
+	
+	private boolean cinemaDataReady = false;
+	private boolean filmDataReady = false;
 	
 	public CinemaList getCinemaList() {
 		return mPCinemaData;
@@ -69,6 +74,14 @@ public class CineWorldService extends Service {
 	
 	public Cinema getCurrentCinema() {
 		return mCurrentCinema;
+	}
+	
+	public boolean getCinemaDataReady() {
+		return cinemaDataReady;
+	}
+	
+	public boolean getFilmDataReady() {
+		return filmDataReady;
 	}
 	
 	public void setCurrentCinema( int index ) {
@@ -132,6 +145,7 @@ public class CineWorldService extends Service {
                 catch( JSONException e ) {
                 	Log.e("CineWorld", "error in cinema jsonObject", e);
                 }
+                cinemaDataReady = true;
 				break;
 				
 			case FILM:
@@ -153,10 +167,12 @@ public class CineWorldService extends Service {
         				}
         			}
         		}
-                catch( JSONException e ) {
+				catch( JSONException e ) {
                 	Log.e("CineWorld", "error in films jsonObject", e);
                 }
+				filmDataReady = true;
 				break;
+				
 			case CINEMA_FILM:
 				
 				try {
@@ -181,8 +197,9 @@ public class CineWorldService extends Service {
 				break;
 		}
 		
-		Log.d("CineWorldService", "processed " + id.toString());
-		
+		Intent i = new Intent( CINEWORLD_DATA_LOADED );
+		i.putExtra("id", id );
+		sendBroadcast( i );
 	}
 	
 	private void updateFilmsForCinema() {

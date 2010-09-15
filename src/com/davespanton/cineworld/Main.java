@@ -9,8 +9,12 @@ import com.davespanton.cineworld.activities.FilmListActivity;
 import com.davespanton.cineworld.services.CineWorldService;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -36,6 +40,13 @@ public class Main extends Activity {
 	private Button mFilmButton;
 		
 	private CineWorldService cineWorldService;
+	
+	private ProgressDialog loaderDialog;
+	
+	protected void onConneted() {
+		if( checkDataReady() )
+			loaderDialog.dismiss();
+	}
 	
 	/** Called when the activity is first created. */
     @Override
@@ -66,6 +77,8 @@ public class Main extends Activity {
        });
         
        bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
+       
+       loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
     }
     
 	@Override
@@ -73,6 +86,22 @@ public class Main extends Activity {
 		super.onDestroy();
 		
 		unbindService(service);
+	}
+
+	@Override
+	protected void onPause() {
+		
+		super.onPause();
+		
+		unregisterReceiver(receiver);
+	}
+
+	@Override
+	protected void onResume() {
+		
+		super.onResume();
+		
+		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
 	}
 
 	@Override
@@ -101,6 +130,14 @@ public class Main extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 	
+	protected boolean checkDataReady() {
+		if( cineWorldService == null )
+			return false;
+		else
+			return cineWorldService.getCinemaDataReady() && cineWorldService.getFilmDataReady();
+	}
+	
+	
 	private void startCinemaActivity() {
 		Intent i = new Intent(this, CinemaListActivity.class);
 		startActivityForResult(i, CINEMAS_RESULT);
@@ -108,7 +145,6 @@ public class Main extends Activity {
 	
 	private void startFilmActivity() {
 		Intent i = new Intent( this, FilmListActivity.class);
-		Bundle b = new Bundle();
 		int request;
 		if( cineWorldService.getCurrentCinema() == null || cineWorldService.getFilmNamesForCurrentCinema() == null ) {
 			
@@ -136,11 +172,11 @@ public class Main extends Activity {
 			return;
 		
 		switch( requestCode ) {
-			case CINEMAS_RESULT:
+			case CINEMAS_RESULT: 
 			
 				cineWorldService.setCurrentCinema( resultCode );
 				updateMainText();
-				startFilmActivity();
+				loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
 			
 				break;
 			case FILMS_RESULT:
@@ -157,6 +193,7 @@ public class Main extends Activity {
 		
 	}
 	
+	//TODO	tie this into broadcasts received from the service.
 	private void updateMainText( ) {
 		
 		String cinema = "";
@@ -177,8 +214,7 @@ public class Main extends Activity {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			cineWorldService = ((CineWorldService.LocalBinder)service).getService();
-			updateMainText();
-			Log.d("Main", "connected to service");
+			onConneted();
 		}
 		
 		@Override
@@ -187,4 +223,25 @@ public class Main extends Activity {
 		}
 	};
 	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
+			
+			switch( id ) {
+				case CINEMA:
+				case FILM:
+					if( checkDataReady()) 
+						loaderDialog.dismiss();
+					break;
+				case CINEMA_FILM:
+						loaderDialog.dismiss();
+						startFilmActivity();
+					break;
+			}
+			
+		}
+	};
 }

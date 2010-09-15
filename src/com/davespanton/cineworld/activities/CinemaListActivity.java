@@ -67,10 +67,10 @@ public class CinemaListActivity extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
+		//cineWorldService.setCurrentCinema( position );
 		
 		setResult(position);
 		finish();
-	
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class CinemaListActivity extends ListActivity {
 			return true;
 		}
 		
-		return result; 
+		return result;
 	}
 
 	@Override
