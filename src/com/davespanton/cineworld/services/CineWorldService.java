@@ -85,8 +85,14 @@ public class CineWorldService extends Service {
 	}
 	
 	public void setCurrentCinema( int index ) {
-		if( mPCinemaData.get(index) == mCurrentCinema || index > (mPCinemaData.size()-1) )
+		
+		if( mPCinemaData.get(index) == mCurrentCinema ) {
+			broadcastDataLoaded( Ids.CINEMA_FILM );
 			return;
+		}
+		else if( index > (mPCinemaData.size()-1) ) {
+			return;
+		}
 		
 		mCurrentCinema = mPCinemaData.get(index);
 		
@@ -197,6 +203,10 @@ public class CineWorldService extends Service {
 				break;
 		}
 		
+		broadcastDataLoaded(id);
+	}
+	
+	protected void broadcastDataLoaded( Ids id ) {
 		Intent i = new Intent( CINEWORLD_DATA_LOADED );
 		i.putExtra("id", id );
 		sendBroadcast( i );
