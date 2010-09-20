@@ -56,8 +56,6 @@ public class FilmListActivity extends ListActivity {
 		
 		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
 		registerForContextMenu( getListView() );
-		
-		Log.d( "FilmListActivity", type.toString() );
 	}
 	
 	@Override
@@ -69,8 +67,6 @@ public class FilmListActivity extends ListActivity {
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
 		
 		type = (Types) getIntent().getSerializableExtra("type");
-		
-		setResult(-1);
 	}
 	
 	@Override
@@ -96,20 +92,11 @@ public class FilmListActivity extends ListActivity {
 		
 		switch( item.getItemId() ) {
 			case CONTEXT_VIEW_INFO:
-				Intent i = new Intent(this, FilmDetailsActivity.class);
-				
-				Film f = mFilmList.get(mSelectedIndex);
-				i.putExtra( "poster_url", f.getPosterUrl() );
-				i.putExtra( "title", f.getTitle() );
-				i.putExtra( "rating", f.getRating() );
-				i.putExtra( "advisory", f.getAdvisory() );
-				
-				startActivity(i);
+				startFilmDetailsActivity();
 				return true;
 		}
 		
 		return result; 
-		
 	}
 	
 	@Override
@@ -117,8 +104,21 @@ public class FilmListActivity extends ListActivity {
 		
 		super.onListItemClick(l, v, position, id);
 		
-		setResult(position);
-		finish();
+		mSelectedIndex = position;
+		
+		startFilmDetailsActivity();
+	}
+	
+	protected void startFilmDetailsActivity() {
+		Intent i = new Intent(this, FilmDetailsActivity.class);
+		
+		Film f = mFilmList.get(mSelectedIndex);
+		i.putExtra( "poster_url", f.getPosterUrl() );
+		i.putExtra( "title", f.getTitle() );
+		i.putExtra( "rating", f.getRating() );
+		i.putExtra( "advisory", f.getAdvisory() );
+		
+		startActivity(i);
 	}
 	
 	private ServiceConnection service = new ServiceConnection() {

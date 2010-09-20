@@ -3,9 +3,13 @@ package com.davespanton.cineworld.activities;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
@@ -34,6 +38,8 @@ public class CinemaListActivity extends ListActivity {
 	
 	private CinemaList mCinemaList;
 	
+	private ProgressDialog loaderDialog;
+	
 	public void onConnected() {
 		
 		setListAdapter( new ArrayAdapter<String>( 
@@ -53,8 +59,6 @@ public class CinemaListActivity extends ListActivity {
 		setContentView(R.layout.cinema);
 		
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
-		
-		setResult( -1 );
 	}
 
 	@Override
@@ -63,14 +67,28 @@ public class CinemaListActivity extends ListActivity {
 		
 		unbindService(service);
 	}
+	
+	@Override
+	protected void onPause() {
+		
+		super.onPause();
+		
+		unregisterReceiver(receiver);
+	}
+
+	@Override
+	protected void onResume() {
+		
+		super.onResume();
+		
+		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+	}
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		//cineWorldService.setCurrentCinema( position );
-		
-		setResult(position);
-		finish();
+		cineWorldService.setCurrentCinema( position );
+		loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", "Loading data. Please wait..." );
 	}
 
 	@Override
@@ -126,6 +144,11 @@ public class CinemaListActivity extends ListActivity {
 		return alert;
 	}
 	
+	private void startFilmActivity() {
+		Intent i = new Intent( this, FilmListActivity.class);
+		i.putExtra( "type", FilmListActivity.Types.CINEMA );
+		startActivity(i);
+	}
 	
 	
 	private ServiceConnection service = new ServiceConnection() {
@@ -139,6 +162,23 @@ public class CinemaListActivity extends ListActivity {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			cineWorldService = null;
+		}
+	};
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
+			
+			switch( id ) {
+				case CINEMA_FILM:
+						loaderDialog.dismiss();
+						startFilmActivity();
+					break;
+			}
+			
 		}
 	};
 	

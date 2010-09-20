@@ -71,7 +71,7 @@ public class Main extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				startFilmActivity();
+				startFilmActivity( FilmListActivity.Types.ALL );
 			}
 		
        });
@@ -123,7 +123,7 @@ public class Main extends Activity {
 				startCinemaActivity();
 				return true;
 			case VIEW_FILMS:
-				startFilmActivity();
+				startFilmActivity( 	FilmListActivity.Types.ALL );
 				return true;
 		}
 		
@@ -140,27 +140,15 @@ public class Main extends Activity {
 	
 	private void startCinemaActivity() {
 		Intent i = new Intent(this, CinemaListActivity.class);
-		startActivityForResult(i, CINEMAS_RESULT);
+		startActivity( i );
 	}
 	
-	private void startFilmActivity() {
+	private void startFilmActivity( FilmListActivity.Types type ) {
 		Intent i = new Intent( this, FilmListActivity.class);
-		int request;
-		if( cineWorldService.getCurrentCinema() == null || cineWorldService.getFilmNamesForCurrentCinema() == null ) {
-			
-			i.putExtra( "type", FilmListActivity.Types.ALL );
-			
-			request = FILMS_RESULT; 
-		}
-		else {
-			
-			i.putExtra( "type", FilmListActivity.Types.CINEMA );
-			
-			request = CINEMA_FILMS_RESULT;
-		}
 		
-		startActivityForResult(i, request);
-		
+		i.putExtra( "type", type );
+	
+		startActivity(i);
 	}
 
 	@Override
@@ -238,7 +226,7 @@ public class Main extends Activity {
 					break;
 				case CINEMA_FILM:
 						loaderDialog.dismiss();
-						startFilmActivity();
+						startFilmActivity( 	FilmListActivity.Types.CINEMA );
 					break;
 			}
 			
