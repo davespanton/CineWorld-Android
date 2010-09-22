@@ -1,6 +1,11 @@
 package com.davespanton.cineworld.activities;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import org.json.JSONException;
+
+import net.sf.jtmdb.Movie;
 
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -8,7 +13,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;

@@ -191,6 +191,7 @@ public class CineWorldService extends Service {
         				{
         					Film f = getFilmFromJSONObject(mCinemaFilms.getJSONObject(i));
         					if( f.validate() ) {
+        						
         						mPCinemaFilmData.add( f );
         						mCinemaFilmData.add(((JSONObject) mCinemaFilms.get(i)).getString("title"));
         					}
