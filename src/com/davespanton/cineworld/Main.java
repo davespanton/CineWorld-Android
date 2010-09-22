@@ -1,9 +1,5 @@
 package com.davespanton.cineworld;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.davespanton.cineworld.activities.CinemaListActivity;
 import com.davespanton.cineworld.activities.FilmListActivity;
 import com.davespanton.cineworld.services.CineWorldService;
@@ -18,7 +14,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
