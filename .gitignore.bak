@@ -1,0 +1,7 @@
+src/com/davespanton/cineworld/ApiKey.java
+bin/com/davespanton/cineworld/ApiKey.class
+<<<<<<< HEAD
+bin/*
+=======
+bin/*.
+>>>>>>> f29bfc6750bdb9282bdd8f25f2bae9c458f06dfb

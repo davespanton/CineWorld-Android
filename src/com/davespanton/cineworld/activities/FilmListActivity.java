@@ -46,12 +46,12 @@ public class FilmListActivity extends ListActivity {
 		
 		switch( type )
 		{
+			//TODO assumes data is ready. maybe better to put loader here than on previous activity?
 			case ALL:
 				data = cineWorldService.getFilmNames();
 				mFilmList = cineWorldService.getFilmList();
 				break;
 			
-			// TODO needs a loader in here (or somewhere) so this information is up-to-date. 
 			case CINEMA:
 				data = cineWorldService.getFilmNamesForCurrentCinema();
 				mFilmList = cineWorldService.getFilmListForCurrentCinema();
