@@ -6,16 +6,30 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.services.CineWorldService;
+import com.davespanton.cineworld.services.TmdbService;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class FilmDetailsActivity extends Activity {
 
+	private TmdbService tmdbservice;
+	
+	protected void onConnected() {
+		
+		tmdbservice.search(getIntent().getStringExtra("title"));
+		
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
@@ -37,9 +51,18 @@ public class FilmDetailsActivity extends Activity {
 		
 		TextView advisory = (TextView) findViewById( R.id.film_advisory );
 		advisory.setText( getIntent().getStringExtra("advisory"));
+		
+		bindService( new Intent(this, TmdbService.class), service, BIND_AUTO_CREATE);
 	}
 	
 	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		
+		unbindService(service);
+	}
+
 	// Thanks to Agus Santoso: http://asantoso.wordpress.com/2008/03/07/download-and-view-image-from-the-web/
 	private Drawable ImageOperations(Context ctx, String url, String saveFilename) {
 		try {
@@ -60,5 +83,19 @@ public class FilmDetailsActivity extends Activity {
 		Object content = url.getContent();
 		return content;
 	}
-
+	
+	private ServiceConnection service = new ServiceConnection() {
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			tmdbservice = ((TmdbService.LocalBinder)service).getService();
+			onConnected();
+		}
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			tmdbservice = null;
+		}
+		
+	};
 }

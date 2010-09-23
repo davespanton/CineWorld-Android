@@ -127,7 +127,7 @@ public class CineWorldService extends Service {
 		return binder;
 	}
 	
-	public void processResult( Ids id, HttpData result ) {
+	protected void processResult( Ids id, HttpData result ) {
 		
 		switch( id )
 		{

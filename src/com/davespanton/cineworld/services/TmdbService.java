@@ -12,10 +12,13 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 public class TmdbService extends Service {
 
 	private final Binder binder = new LocalBinder();
+	
+	private String pendingQuery = "";
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -31,11 +34,26 @@ public class TmdbService extends Service {
 		GeneralSettings.setApiKey( "779c40d6ac22bacf3464f3256dc67ec4" );
 	}
 
-
-
 	public class LocalBinder extends Binder {
 		public TmdbService getService() {
 			return TmdbService.this; 
+		}
+	}
+	
+	public void search( String query ) {
+		FetchMovieTask task = new FetchMovieTask();
+		task.execute( query );
+	}
+	
+	protected void processResult( List<Movie> result ) {
+		
+		for( Movie movie : result ) {
+			
+			Log.v( "TmdbService", "ENTRY " + movie.getName() );
+			
+			if( movie.getName() == pendingQuery )
+				Log.v( "TmdbService", "MATCH " + movie.getName() );
+				
 		}
 	}
 
@@ -46,16 +64,21 @@ public class TmdbService extends Service {
 			try {
 				return Movie.search( query[0] );
 			} catch (IOException e) {
-				// TODO notify of user of error
+				// TODO notify the user of error
 				e.printStackTrace();
 			} catch (JSONException e) {
-				// TODO notify of user of error
+				// TODO notify the user of error
 				e.printStackTrace();
 			}
 			return null;
 		}
+
+		@Override
+		protected void onPostExecute(List<Movie> result) {
+			super.onPostExecute(result);
+			
+			processResult( result );
+		}
 		
 	}
-
-	
 }
