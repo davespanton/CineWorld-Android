@@ -70,7 +70,7 @@ public class TmdbService extends Service {
 	protected void processResult( List<Movie> result ) {
 		
 		if( result == null || result.size() == 0 ) {
-			Log.v( "TmdbService", "NO results found");
+			broadcastDataLoaded(false);
 			return;
 		}
 		//TODO	refine the process criteria
@@ -111,6 +111,7 @@ public class TmdbService extends Service {
 	
 	protected void broadcastDataLoaded( boolean success ) {
 		Intent i = new Intent( TMDB_DATA_LOADED );
+		Log.v( "SRC", Boolean.toString(success) );
 		i.putExtra("success", success );
 		sendBroadcast( i );
 	}

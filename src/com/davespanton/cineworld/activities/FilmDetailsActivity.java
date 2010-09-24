@@ -129,8 +129,8 @@ public class FilmDetailsActivity extends Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			
-			boolean success = getIntent().getBooleanExtra("success", false);
-			
+			boolean success = intent.getBooleanExtra("success", false);
+			Log.v( "END", Boolean.toString(success) );
 			movie = tmdbService.getMovie( getIntent().getStringExtra("title") );
 			
 			if( success && movie != null)
