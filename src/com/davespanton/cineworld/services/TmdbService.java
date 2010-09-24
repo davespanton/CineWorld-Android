@@ -1,6 +1,7 @@
 package com.davespanton.cineworld.services;
 
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.json.JSONException;
@@ -15,17 +16,19 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class TmdbService extends Service {
-
+	
+	public static final String TMDB_DATA_LOADED = "tmdbDataLoaded";
+	
 	private final Binder binder = new LocalBinder();
 	
 	private String pendingQuery = "";
+	
+	private Hashtable<String, Movie> movieTable = new Hashtable<String, Movie>();
 	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return binder;
 	}
-	
-	
 	
 	@Override
 	public void onCreate() {
@@ -41,20 +44,75 @@ public class TmdbService extends Service {
 	}
 	
 	public void search( String query ) {
-		FetchMovieTask task = new FetchMovieTask();
-		task.execute( query );
+		
+		if( movieTable.containsKey(query) )
+			broadcastDataLoaded( true );
+		else {
+			pendingQuery = query;
+			FetchMovieTask task = new FetchMovieTask();
+			task.execute( query );
+		}
 	}
+	
+	public Movie getMovie( String title ) {
+		
+		if( movieTable.containsKey( title ) )
+			return movieTable.get(title);
+		else
+			return null;
+	}
+	
+	public boolean hasMovie( String title ) {
+		return movieTable.containsKey( title );
+	}
+	
 	
 	protected void processResult( List<Movie> result ) {
 		
+		if( result == null || result.size() == 0 ) {
+			Log.v( "TmdbService", "NO results found");
+			return;
+		}
+		//TODO	refine the process criteria
+		Movie selectedResult = null;
+		
+		//steps up as more suitable matches are found.
+		int level = 0;
 		for( Movie movie : result ) {
 			
-			Log.v( "TmdbService", "ENTRY " + movie.getName() );
+			if( movie.getName().contentEquals( pendingQuery ) ) {
+				selectedResult = movie;
+				level = 4;
+				break;
+			}
 			
-			if( movie.getName() == pendingQuery )
-				Log.v( "TmdbService", "MATCH " + movie.getName() );
-				
+			if( movie.getName().contains( pendingQuery ) && level < 3 ) {
+				selectedResult = movie;
+				level = 3;
+			}
+			
+			if( movie.getAlternativeName().contentEquals( pendingQuery ) && level < 2 ) {
+				selectedResult = movie;
+				level = 2;
+			}
+			
+			if( movie.getAlternativeName().contains( pendingQuery ) && level == 0 ) {
+				selectedResult = movie;
+				level = 1;
+			}
 		}
+		
+		//TODO	something if no results were returned.
+		if( selectedResult != null )
+			movieTable.put(pendingQuery, selectedResult);
+		
+		broadcastDataLoaded( selectedResult != null );
+	}
+	
+	protected void broadcastDataLoaded( boolean success ) {
+		Intent i = new Intent( TMDB_DATA_LOADED );
+		i.putExtra("success", success );
+		sendBroadcast( i );
 	}
 
 	class FetchMovieTask extends AsyncTask<String, Void, List<Movie>> {

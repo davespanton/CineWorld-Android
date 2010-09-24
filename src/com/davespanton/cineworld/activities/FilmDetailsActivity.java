@@ -5,29 +5,35 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import net.sf.jtmdb.Movie;
+
 import com.davespanton.cineworld.R;
-import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class FilmDetailsActivity extends Activity {
 
-	private TmdbService tmdbservice;
+	private TmdbService tmdbService;
+	
+	private Movie movie;
+	
+	private TextView body;
 	
 	protected void onConnected() {
-		
-		tmdbservice.search(getIntent().getStringExtra("title"));
-		
+		tmdbService.search(getIntent().getStringExtra("title"));
 	}
 	
 	@Override
@@ -47,10 +53,12 @@ public class FilmDetailsActivity extends Activity {
 		image.setImageDrawable(img);
 		
 		TextView rating = (TextView) findViewById( R.id.film_rating );
-		rating.setText( getIntent().getStringExtra("rating"));
+		rating.setText( "(" + getIntent().getStringExtra("rating") + ")" );
 		
-		TextView advisory = (TextView) findViewById( R.id.film_advisory );
-		advisory.setText( getIntent().getStringExtra("advisory"));
+		//TextView advisory = (TextView) findViewById( R.id.film_advisory );
+		//advisory.setText( getIntent().getStringExtra("advisory"));
+		
+		body = (TextView) findViewById( R.id.film_body );
 		
 		bindService( new Intent(this, TmdbService.class), service, BIND_AUTO_CREATE);
 	}
@@ -62,8 +70,25 @@ public class FilmDetailsActivity extends Activity {
 		
 		unbindService(service);
 	}
+	
+	@Override
+	protected void onPause() {
+		
+		super.onPause();
+		
+		unregisterReceiver(receiver);
+	}
 
+	@Override
+	protected void onResume() {
+		
+		super.onResume();
+		
+		registerReceiver(receiver, new IntentFilter(TmdbService.TMDB_DATA_LOADED));
+	}
+	
 	// Thanks to Agus Santoso: http://asantoso.wordpress.com/2008/03/07/download-and-view-image-from-the-web/
+	//TODO move this to a background thread.
 	private Drawable ImageOperations(Context ctx, String url, String saveFilename) {
 		try {
 			InputStream is = (InputStream) this.fetch(url);
@@ -88,14 +113,30 @@ public class FilmDetailsActivity extends Activity {
 		
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
-			tmdbservice = ((TmdbService.LocalBinder)service).getService();
+			tmdbService = ((TmdbService.LocalBinder)service).getService();
 			onConnected();
 		}
 		
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			tmdbservice = null;
+			tmdbService = null;
 		}
 		
+	};
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			boolean success = getIntent().getBooleanExtra("success", false);
+			
+			movie = tmdbService.getMovie( getIntent().getStringExtra("title") );
+			
+			if( success && movie != null)
+				body.setText( movie.getOverview() );
+			else
+				body.setText( R.string.no_information );
+		}
 	};
 }

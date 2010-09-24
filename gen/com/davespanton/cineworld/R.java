@@ -25,12 +25,12 @@ public final class R {
     }
     public static final class id {
         public static final int cinema_button=0x7f060004;
-        public static final int film_advisory=0x7f060003;
+        public static final int film_body=0x7f060003;
         public static final int film_button=0x7f060005;
-        public static final int film_rating=0x7f060002;
+        public static final int film_rating=0x7f060001;
         public static final int film_title=0x7f060000;
         public static final int main_text=0x7f060006;
-        public static final int still_image=0x7f060001;
+        public static final int still_image=0x7f060002;
     }
     public static final class layout {
         public static final int cinema=0x7f030000;
@@ -45,7 +45,9 @@ public final class R {
         public static final int current_film=0x7f040004;
         public static final int no_current_cinema=0x7f040005;
         public static final int no_current_film=0x7f040006;
+        public static final int no_information=0x7f04000a;
         public static final int okay=0x7f040008;
+        public static final int overview=0x7f040009;
         public static final int view_cinemas=0x7f040001;
         public static final int view_films=0x7f040002;
         public static final int view_info=0x7f040007;

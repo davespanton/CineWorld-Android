@@ -11,4 +11,6 @@
 <string name="view_info">View information</string>
 <string name="okay">Okay</string>
 
+<string name="overview">Overview</string>
+<string name="no_information">No information available.</string>
 </resources>
