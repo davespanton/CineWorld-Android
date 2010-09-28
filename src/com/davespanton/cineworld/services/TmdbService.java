@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.json.JSONException;
 
+import com.davespanton.cineworld.ApiKey;
+
 import net.sf.jtmdb.GeneralSettings;
 import net.sf.jtmdb.Movie;
 import android.app.Service;
@@ -21,6 +23,8 @@ public class TmdbService extends Service {
 	
 	private final Binder binder = new LocalBinder();
 	
+	private FetchMovieTask task = null;
+	
 	private String pendingQuery = "";
 	
 	private Hashtable<String, Movie> movieTable = new Hashtable<String, Movie>();
@@ -33,8 +37,7 @@ public class TmdbService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		GeneralSettings.setApiKey( "779c40d6ac22bacf3464f3256dc67ec4" );
+		GeneralSettings.setApiKey( ApiKey.TMDB_KEY );
 	}
 
 	public class LocalBinder extends Binder {
@@ -47,11 +50,8 @@ public class TmdbService extends Service {
 		
 		if( movieTable.containsKey(query) )
 			broadcastDataLoaded( true );
-		else {
-			pendingQuery = query;
-			FetchMovieTask task = new FetchMovieTask();
-			task.execute( query );
-		}
+		else 
+			initiateSearch(query);
 	}
 	
 	public Movie getMovie( String title ) {
@@ -66,9 +66,19 @@ public class TmdbService extends Service {
 		return movieTable.containsKey( title );
 	}
 	
+	protected void initiateSearch( String query ) {
+		pendingQuery = query;
+		
+		if( task != null )
+			task.cancel(true);
+		
+		task = new FetchMovieTask();
+		task.execute( query );
+	}
+	
 	
 	protected void processResult( List<Movie> result ) {
-		
+		Log.v( "TmdbService", pendingQuery );
 		if( result == null || result.size() == 0 ) {
 			broadcastDataLoaded(false);
 			return;
@@ -102,7 +112,6 @@ public class TmdbService extends Service {
 			}
 		}
 		
-		//TODO	something if no results were returned.
 		if( selectedResult != null )
 			movieTable.put(pendingQuery, selectedResult);
 		
@@ -111,10 +120,51 @@ public class TmdbService extends Service {
 	
 	protected void broadcastDataLoaded( boolean success ) {
 		Intent i = new Intent( TMDB_DATA_LOADED );
-		Log.v( "SRC", Boolean.toString(success) );
 		i.putExtra("success", success );
 		sendBroadcast( i );
 	}
+	
+	/* ******************************************************
+	 *	Part of an Experiment into multi-stage searching,	*
+	 *	trying to ignore certain combinations found in 		*
+	 *	queries. Wasn't really accurate enough.				*
+	 ********************************************************/
+	
+	//private String[] multiStageStrings = { "in 3D", "in 2D", "3D", "2D" };
+	//private boolean multiStageTask = false;
+	//private int taskStage = 0;
+	
+	/*protected void nextStage() {
+		taskStage++;
+		String newQuery = removeMultiPartStrings(pendingQuery);
+		initiateSearch(newQuery);
+	}
+	
+	protected boolean isMultiStageQuery( String query ) {
+		
+		for( String str : multiStageStrings ) {
+			if( query.contains(str) )
+					return true;
+		}
+				
+		return false;
+	}
+	
+	protected String removeMultiPartStrings( String query ) {
+		
+		String newQuery = null;
+		
+		for( String str : multiStageStrings ) {
+			if( query.contains(str)) {
+				newQuery = query.replace(str, "");
+				break;
+			}
+		}
+		
+		return newQuery == null ? query : newQuery;
+	}*/
+	
+	// **********************************************************
 
 	class FetchMovieTask extends AsyncTask<String, Void, List<Movie>> {
 
