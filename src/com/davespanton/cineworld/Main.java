@@ -97,6 +97,9 @@ public class Main extends Activity {
 		super.onResume();
 		
 		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		
+		if( checkDataReady() && loaderDialog.isShowing() )
+			loaderDialog.dismiss();
 	}
 
 	@Override
@@ -159,7 +162,7 @@ public class Main extends Activity {
 			
 				cineWorldService.setCurrentCinema( resultCode );
 				updateMainText();
-				loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
+				loaderDialog = ProgressDialog.show(Main.this, "", getString(R.string.loading_data));
 			
 				break;
 			case FILMS_RESULT:

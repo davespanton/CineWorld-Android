@@ -20,7 +20,6 @@ import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -42,9 +41,9 @@ public class FilmDetailsActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView( R.layout.film_details );
 		
-		String stillUrl = getIntent().getStringExtra("poster_url");
+		String stillUrl = getIntent().getStringExtra("still_url"); 
 		
-		Drawable img = ImageOperations(this, stillUrl, "film.jpg"	);
+		Drawable img = ImageOperations(this, stillUrl, "film.jpg");
 		
 		TextView text = (TextView) findViewById( R.id.film_title );
 		text.setText( getIntent().getStringExtra("title"));
@@ -53,9 +52,9 @@ public class FilmDetailsActivity extends Activity {
 		image.setImageDrawable(img);
 		
 		TextView rating = (TextView) findViewById( R.id.film_rating );
-		rating.setText( "(" + getIntent().getStringExtra("rating") + ")" );
+		rating.setText( getString(R.string.rating) + ": " + getIntent().getStringExtra("rating") );
 		
-		//TextView advisory = (TextView) findViewById( R.id.film_advisory );
+		//TextView advisory = (TextView) findViewById( R.id.film_advisory ); 
 		//advisory.setText( getIntent().getStringExtra("advisory"));
 		
 		body = (TextView) findViewById( R.id.film_body );

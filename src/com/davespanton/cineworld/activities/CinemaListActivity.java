@@ -88,7 +88,7 @@ public class CinemaListActivity extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		cineWorldService.setCurrentCinema( position );
-		loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", "Loading data. Please wait..." );
+		loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
 	}
 
 	@Override

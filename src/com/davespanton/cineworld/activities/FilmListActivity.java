@@ -113,6 +113,7 @@ public class FilmListActivity extends ListActivity {
 		
 		Film f = mFilmList.get(mSelectedIndex);
 		i.putExtra( "poster_url", f.getPosterUrl() );
+		i.putExtra( "still_url", f.getStillUrl() );
 		i.putExtra( "title", f.getTitle() );
 		i.putExtra( "rating", f.getRating() );
 		i.putExtra( "advisory", f.getAdvisory() );

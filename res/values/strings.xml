@@ -13,4 +13,6 @@
 
 <string name="overview">Overview</string>
 <string name="no_information">No information available.</string>
+<string name="rating">Rating</string>
+<string name="loading_data">Loading data. Please wait...</string>
 </resources>
