@@ -138,4 +138,10 @@ public class FilmDetailsActivity extends Activity {
 				body.setText( R.string.no_information );
 		}
 	};
+	
+	/*class FetchImageTask extends AyncTask<> {
+		
+	}*/
+	
+	
 }

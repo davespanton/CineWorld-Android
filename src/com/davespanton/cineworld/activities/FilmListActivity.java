@@ -103,6 +103,7 @@ public class FilmListActivity extends ListActivity {
 		
 		super.onListItemClick(l, v, position, id);
 		
+		cineWorldService.setCurrentFilm(position);
 		mSelectedIndex = position;
 		
 		startFilmDetailsActivity();

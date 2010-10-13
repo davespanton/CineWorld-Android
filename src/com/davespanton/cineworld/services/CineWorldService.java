@@ -29,7 +29,7 @@ public class CineWorldService extends Service {
 	
 	private final Binder binder = new LocalBinder();
 	
-	public enum Ids { FILM, CINEMA, CINEMA_FILM };
+	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
 	
 	private JSONArray mCinemas;
 	private ArrayList<String> mCinemaData;
@@ -43,7 +43,11 @@ public class CineWorldService extends Service {
 	private ArrayList<String> mCinemaFilmData;
 	private FilmList mPCinemaFilmData;
 	
+	private JSONArray mFilmDates;
+	private ArrayList<String> mFilmDatesData;
+	
 	private Cinema mCurrentCinema;
+	private Film mCurrentFilm;
 	
 	private boolean cinemaDataReady = false;
 	private boolean filmDataReady = false;
@@ -72,16 +76,16 @@ public class CineWorldService extends Service {
 		return mCinemaFilmData;
 	}
 	
-	public Cinema getCurrentCinema() {
-		return mCurrentCinema;
-	}
-	
 	public boolean getCinemaDataReady() {
 		return cinemaDataReady;
 	}
 	
 	public boolean getFilmDataReady() {
 		return filmDataReady;
+	}
+	
+	public Cinema getCurrentCinema() {
+		return mCurrentCinema;
 	}
 	
 	public void setCurrentCinema( int index ) {
@@ -97,6 +101,24 @@ public class CineWorldService extends Service {
 		mCurrentCinema = mPCinemaData.get(index);
 		
 		updateFilmsForCinema();
+	}
+	
+	public Film getCurrentFilm() {
+		return mCurrentFilm;
+	}
+	
+	public void setCurrentFilm( int index ) {
+		if( mPFilmData.get(index) == mCurrentFilm ) {
+			// TODO broadcast dates
+			return;
+		}
+		else if( index > (mPFilmData.size()-1)){
+			return;
+		}
+		
+		mCurrentFilm = mPFilmData.get(index);
+		
+		updateDatesForFilm();
 	}
 	
 	@Override
@@ -202,6 +224,22 @@ public class CineWorldService extends Service {
 					e.printStackTrace();
 				}
 				break;
+				
+			case FILM_DATES:
+				
+				try {
+					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
+					mFilmDates = obj.getJSONArray("dates");
+					mFilmDatesData = new ArrayList<String>();
+					for( int i = 0; i < mFilmDates.length(); i++ ) {
+						mFilmDatesData.add( mFilmDates.getString(i) );
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				break;
 		}
 		
 		broadcastDataLoaded(id);
@@ -219,6 +257,18 @@ public class CineWorldService extends Service {
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+	}
+	
+	private void updateDatesForFilm() {
+		if( mCurrentCinema == null || mCurrentFilm == null )
+			return;
+		
+		String cinemaId = mCurrentCinema.getId();
+		String filmId = mCurrentFilm.getEdi();
+		
+		FetchDataTask fdt = new FetchDataTask();
+		fdt.id = Ids.FILM_DATES;
+		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
 	}
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {

@@ -35,7 +35,7 @@
 			android:layout_gravity="center_horizontal"
 			android:paddingLeft="25px"
 			android:paddingRight="25px"
-			android:paddingTop="10px"
+			
 		/>
 		
 		<View 
