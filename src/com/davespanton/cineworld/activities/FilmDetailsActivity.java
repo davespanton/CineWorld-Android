@@ -9,6 +9,7 @@ import net.sf.jtmdb.Movie;
 
 import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.services.TmdbService;
+import com.github.droidfu.widgets.WebImageView;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -49,12 +50,15 @@ public class FilmDetailsActivity extends Activity {
 		TextView text = (TextView) findViewById( R.id.film_title );
 		text.setText( getIntent().getStringExtra("title"));
 		
-		ImageView image = (ImageView) findViewById( R.id.still_image );
+		WebImageView image = (WebImageView) findViewById( R.id.still_image );
+		image.setImageUrl( stillUrl );
+		image.loadImage();
+		//ImageView image = (ImageView) findViewById( R.id.still_image );
 		//image.setImageDrawable(img);
 		
-		FetchImageTask fetch = new FetchImageTask();
-		fetch.target = image;
-		fetch.execute(stillUrl);
+		//FetchImageTask fetch = new FetchImageTask();
+		//fetch.target = image;
+		//fetch.execute(stillUrl);
 		
 		TextView rating = (TextView) findViewById( R.id.film_rating );
 		rating.setText( getString(R.string.rating) + ": " + getIntent().getStringExtra("rating") );

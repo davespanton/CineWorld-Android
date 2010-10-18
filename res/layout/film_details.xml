@@ -23,7 +23,7 @@
 		
 		<View 
 			android:layout_width="1px"
-			android:layout_height="20px"
+			android:layout_height="10px"
 		/>
 
 		<TextView 
@@ -32,14 +32,17 @@
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
 		/>
+		
+		<View 
+			android:layout_width="1px"
+			android:layout_height="10px"
+		/>
 				
-		<ImageView 
+		<com.github.droidfu.widgets.WebImageView
 			android:id="@+id/still_image" 
 			android:layout_width="wrap_content" 
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
-			
-			
 		/>
 		
 		<View 
