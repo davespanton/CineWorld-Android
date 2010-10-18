@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.ImageView;
@@ -43,13 +44,17 @@ public class FilmDetailsActivity extends Activity {
 		
 		String stillUrl = getIntent().getStringExtra("still_url"); 
 		
-		Drawable img = ImageOperations(this, stillUrl, "film.jpg");
+		//Drawable img = ImageOperations(this, stillUrl, "film.jpg");
 		
 		TextView text = (TextView) findViewById( R.id.film_title );
 		text.setText( getIntent().getStringExtra("title"));
 		
 		ImageView image = (ImageView) findViewById( R.id.still_image );
-		image.setImageDrawable(img);
+		//image.setImageDrawable(img);
+		
+		FetchImageTask fetch = new FetchImageTask();
+		fetch.target = image;
+		fetch.execute(stillUrl);
 		
 		TextView rating = (TextView) findViewById( R.id.film_rating );
 		rating.setText( getString(R.string.rating) + ": " + getIntent().getStringExtra("rating") );
@@ -86,26 +91,8 @@ public class FilmDetailsActivity extends Activity {
 		registerReceiver(receiver, new IntentFilter(TmdbService.TMDB_DATA_LOADED));
 	}
 	
-	// Thanks to Agus Santoso: http://asantoso.wordpress.com/2008/03/07/download-and-view-image-from-the-web/
-	//TODO move this to a background thread.
-	private Drawable ImageOperations(Context ctx, String url, String saveFilename) {
-		try {
-			InputStream is = (InputStream) this.fetch(url);
-			Drawable d = Drawable.createFromStream(is, "src");
-			return d;
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			return null;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public Object fetch(String address) throws MalformedURLException,IOException {
-		URL url = new URL(address);
-		Object content = url.getContent();
-		return content;
+	private void updateImageView( ImageView target, Drawable image ) {
+		target.setImageDrawable(image);
 	}
 	
 	private ServiceConnection service = new ServiceConnection() {
@@ -139,9 +126,38 @@ public class FilmDetailsActivity extends Activity {
 		}
 	};
 	
-	/*class FetchImageTask extends AyncTask<> {
+	class FetchImageTask extends AsyncTask< String, Void, Object > {
 		
-	}*/
+		public ImageView target;
+		
+		@Override
+		protected Object doInBackground(String... address) {
+			
+			URL url = null;
+			Object content = null;
+			
+			try {
+				url = new URL(address[0]);
+				content = url.getContent();
+			} 
+			catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			return content;
+		}
+
+		@Override
+		protected void onPostExecute(Object result) {
+			super.onPostExecute(result);
+			InputStream is = (InputStream) result;
+			Drawable d = Drawable.createFromStream(is, "src");
+			updateImageView(target, d);
+		}
+		
+	}
 	
 	
 }

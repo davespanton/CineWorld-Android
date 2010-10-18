@@ -21,6 +21,11 @@
 			android:textSize="10pt" 
 		/>
 		
+		<View 
+			android:layout_width="1px"
+			android:layout_height="20px"
+		/>
+
 		<TextView 
 			android:id="@+id/film_rating" 
 			android:layout_width="wrap_content" 
@@ -33,8 +38,7 @@
 			android:layout_width="wrap_content" 
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
-			android:paddingLeft="25px"
-			android:paddingRight="25px"
+			
 			
 		/>
 		
