@@ -44,7 +44,7 @@ public class CineWorldService extends Service {
 	private FilmList mPCinemaFilmData;
 	
 	private JSONArray mFilmDates;
-	private ArrayList<String> mFilmDatesData;
+	private ArrayList<String> mFilmDatesData = null;
 	
 	private Cinema mCurrentCinema;
 	private Film mCurrentFilm;
@@ -74,6 +74,10 @@ public class CineWorldService extends Service {
 	
 	public ArrayList<String> getFilmNamesForCurrentCinema() {
 		return mCinemaFilmData;
+	}
+	
+	public ArrayList<String> getDatesForCurrentFilm() {
+		return mFilmDatesData;
 	}
 	
 	public boolean getCinemaDataReady() {

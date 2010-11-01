@@ -88,6 +88,9 @@ public class Main extends Activity {
 		
 		super.onPause();
 		
+		if( loaderDialog != null && loaderDialog.isShowing() )
+			loaderDialog.dismiss();
+		
 		unregisterReceiver(receiver);
 	}
 

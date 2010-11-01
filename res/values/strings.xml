@@ -15,4 +15,7 @@
 <string name="no_information">No information available.</string>
 <string name="rating">Rating</string>
 <string name="loading_data">Loading data. Please wait...</string>
+<string name="tmdb_more_info">Find more info from tmdb</string>
+<string name="dates_times">Dates and times</string>
+
 </resources>

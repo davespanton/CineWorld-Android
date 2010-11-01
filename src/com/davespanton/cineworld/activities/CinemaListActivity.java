@@ -73,6 +73,9 @@ public class CinemaListActivity extends ListActivity {
 		
 		super.onPause();
 		
+		if( loaderDialog != null && loaderDialog.isShowing() )
+			loaderDialog.dismiss();
+		
 		unregisterReceiver(receiver);
 	}
 
