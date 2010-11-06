@@ -19,18 +19,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.TextView;
 
 public class Main extends Activity {
     
 	private static final int VIEW_CINEMAS = 0;
 	private static final int VIEW_FILMS = 1;
 	
-	private static final int CINEMAS_RESULT = 0;
-	private static final int FILMS_RESULT = 1;
-	private static final int CINEMA_FILMS_RESULT = 2;
-	
-	private TextView mMainText;
 	private Button mCinemaButton;
 	private Button mFilmButton;
 		
@@ -49,7 +43,6 @@ public class Main extends Activity {
        super.onCreate(savedInstanceState);
        setContentView(R.layout.main);
         
-       mMainText = (TextView) findViewById(R.id.main_text);
        mCinemaButton = (Button) findViewById(R.id.cinema_button);
        mFilmButton = (Button) findViewById(R.id.film_button);
         
@@ -145,57 +138,13 @@ public class Main extends Activity {
 	}
 	
 	private void startFilmActivity( FilmListActivity.Types type ) {
+		cineWorldService.clearCurrentCinema();
+		
 		Intent i = new Intent( this, FilmListActivity.class);
 		
 		i.putExtra( "type", type );
 	
 		startActivity(i);
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-		super.onActivityResult(requestCode, resultCode, data);
-		
-		if( resultCode == -1 )
-			return;
-		
-		switch( requestCode ) {
-			case CINEMAS_RESULT: 
-			
-				cineWorldService.setCurrentCinema( resultCode );
-				updateMainText();
-				loaderDialog = ProgressDialog.show(Main.this, "", getString(R.string.loading_data));
-			
-				break;
-			case FILMS_RESULT:
-			
-				//TODO	launch film details activity.
-			
-				break; 
-			case CINEMA_FILMS_RESULT:
-				
-				//TODO	launch film details activity.
-			
-			break;
-		}
-		
-	}
-	
-	//TODO	tie this into broadcasts received from the service.
-	private void updateMainText( ) {
-		
-		String cinema = "";
-		String film = "";
-		
-		if( cineWorldService.getCurrentCinema() != null )
-				cinema = getString(R.string.current_cinema) + cineWorldService.getCurrentCinema().getName();
-		else
-			cinema = getString(R.string.no_current_cinema);
-		
-		//TODO	maybe add in current film... if it's going to be used.		
-		
-		mMainText.setText( cinema + "\n" + film );
 	}
 	
 	private ServiceConnection service = new ServiceConnection() {

@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 
 import net.sf.jtmdb.Movie;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.data.PerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 import com.davespanton.cineworld.services.CineWorldService.Ids;
 import com.github.droidfu.widgets.WebImageView;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,15 +29,25 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class FilmDetailsActivity extends Activity {
 
+	private static final int DATE_DIALOG_ID = 0;
+	
 	private TmdbService tmdbService;
 	private CineWorldService cineworldService;
 	
 	private Movie movie;
+	
+	private int mYear;
+    private int mMonth;
+    private int mDay;
 	
 	//private TextView body;
 	
@@ -73,10 +87,26 @@ public class FilmDetailsActivity extends Activity {
 				
 		//body = (TextView) findViewById( R.id.film_body );
 		
+		Button showDates = (Button) findViewById( R.id.date_times );
+		
+		showDates.setOnClickListener( new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				showDialog(DATE_DIALOG_ID);
+			}
+			
+		});
+		
+		// get the current date
+        final Calendar c = Calendar.getInstance();
+        mYear = c.get(Calendar.YEAR);
+        mMonth = c.get(Calendar.MONTH);
+        mDay = c.get(Calendar.DAY_OF_MONTH);
+		
 		bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
 		bindService( new Intent(this, CineWorldService.class), cineworldServiceConn, BIND_AUTO_CREATE);
 	}
-	
 	
 	@Override
 	protected void onDestroy() {
@@ -107,6 +137,37 @@ public class FilmDetailsActivity extends Activity {
 	private void updateImageView( ImageView target, Drawable image ) {
 		target.setImageDrawable(image);
 	}
+	
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		
+		switch( id ) {
+			
+			case DATE_DIALOG_ID:
+				return new DatePickerDialog(this, mDateSetListener, mYear, mMonth, mDay);
+		}
+		
+		return null;
+	}
+	
+	private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
+
+		@Override
+		public void onDateSet(DatePicker view, int year, int monthOfYear,
+				int dayOfMonth) {
+			
+			Log.d("DATE", Integer.toString(year) + " " + Integer.toString(monthOfYear) + " " + Integer.toString(dayOfMonth));
+			
+			String day;
+			if( dayOfMonth < 10 )
+				day = "0" + Integer.toString(dayOfMonth);
+			else
+				day = Integer.toString(dayOfMonth);
+				
+			cineworldService.requestPerformancesForCurrentFilm( Integer.toString(year) + Integer.toString(monthOfYear) + day );
+		}
+		
+	};
 	
 	private ServiceConnection serviceConn = new ServiceConnection() {
 		
@@ -163,7 +224,12 @@ public class FilmDetailsActivity extends Activity {
 			switch( (Ids) intent.getSerializableExtra("id") ) {
 				case FILM_DATES:
 					//TODO enable dates/times button
-					Log.v("DATES REC", cineworldService.getDatesForCurrentFilm().toString() );
+					Log.d("Cineworld data rec", cineworldService.getDatesForCurrentFilm().toString() );
+					break;
+				case DATE_TIMES:
+					//PerformanceList performances = (PerformanceList) intent.getSerializableExtra("data");
+					
+					Log.d("Cineworld data rec", "rec" );
 					break;
 			}
 		}

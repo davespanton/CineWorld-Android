@@ -29,7 +29,6 @@ public final class R {
         public static final int film_button=0x7f060006;
         public static final int film_rating=0x7f060001;
         public static final int film_title=0x7f060000;
-        public static final int main_text=0x7f060007;
         public static final int more_info=0x7f060004;
         public static final int still_image=0x7f060002;
     }

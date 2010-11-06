@@ -51,13 +51,6 @@
 	android:layout_height="20px"
 	
 	/>
-	
-<TextView
-    android:id="@+id/main_text"
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:layout_gravity="center_horizontal"
-    />
-    
+   
 
 </LinearLayout>

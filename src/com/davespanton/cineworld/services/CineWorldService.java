@@ -15,12 +15,15 @@ import com.davespanton.cineworld.data.Cinema;
 import com.davespanton.cineworld.data.CinemaList;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
+import com.davespanton.cineworld.data.Performance;
+import com.davespanton.cineworld.data.PerformanceList;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 
 public class CineWorldService extends Service {
@@ -31,23 +34,40 @@ public class CineWorldService extends Service {
 	
 	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
 	
+	// Cinema data
 	private JSONArray mCinemas;
 	private ArrayList<String> mCinemaData;
 	private CinemaList mPCinemaData;
+	
+	
+	// Films data
 	
 	private JSONArray mFilms;
 	private ArrayList<String> mFilmData;
 	private FilmList mPFilmData;
 	
+	// Films for selected cinema data.
+	
 	private JSONArray mCinemaFilms;
 	private ArrayList<String> mCinemaFilmData;
 	private FilmList mPCinemaFilmData;
 	
+	// Film date data
+	
 	private JSONArray mFilmDates;
 	private ArrayList<String> mFilmDatesData = null;
 	
+	// Performance data
+	
+	private JSONArray mFilmPerformance;
+	private PerformanceList mPFilmPerformanceData;
+	
+	// Current selection data
+	
 	private Cinema mCurrentCinema;
 	private Film mCurrentFilm;
+	
+	// Flags indicating if Cinema and Film data are loaded. 
 	
 	private boolean cinemaDataReady = false;
 	private boolean filmDataReady = false;
@@ -80,6 +100,16 @@ public class CineWorldService extends Service {
 		return mFilmDatesData;
 	}
 	
+	//TODO return a token from this request?
+	public boolean requestPerformancesForCurrentFilm( String date ) {
+		if( mCurrentFilm != null ) {
+			updatePerformancesForFilm(date);
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public boolean getCinemaDataReady() {
 		return cinemaDataReady;
 	}
@@ -95,7 +125,7 @@ public class CineWorldService extends Service {
 	public void setCurrentCinema( int index ) {
 		
 		if( mPCinemaData.get(index) == mCurrentCinema ) {
-			broadcastDataLoaded( Ids.CINEMA_FILM );
+			broadcastDataLoaded( Ids.CINEMA_FILM, null );
 			return;
 		}
 		else if( index > (mPCinemaData.size()-1) ) {
@@ -107,22 +137,28 @@ public class CineWorldService extends Service {
 		updateFilmsForCinema();
 	}
 	
+	public void clearCurrentCinema() {
+		mCurrentCinema = null;
+	}
+	
 	public Film getCurrentFilm() {
 		return mCurrentFilm;
 	}
 	
-	public void setCurrentFilm( int index ) {
-		if( mPFilmData.get(index) == mCurrentFilm ) {
-			// TODO broadcast dates
-			return;
-		}
-		else if( index > (mPFilmData.size()-1)){
-			return;
-		}
+	
+	public void setCurrentFilm( int index, boolean all ) {
 		
-		mCurrentFilm = mPFilmData.get(index);
+		FilmList source = all ? mPFilmData : mPCinemaFilmData;
 		
-		updateDatesForFilm();
+		if( source.get(index) == mCurrentFilm )
+			return;
+		else if( index > (source.size()-1))
+			return;
+		
+		mCurrentFilm = source.get(index);
+		
+		//unused at the moment - using a date picker instead of constantly polling for availble dates
+		//updateDatesForFilm();
 	}
 	
 	@Override
@@ -155,6 +191,8 @@ public class CineWorldService extends Service {
 	
 	protected void processResult( Ids id, HttpData result ) {
 		
+		Parcelable extraData = null;
+		
 		switch( id )
 		{
 			case CINEMA:
@@ -167,8 +205,8 @@ public class CineWorldService extends Service {
         			mPCinemaData = new CinemaList();
         			
         			for( int i = 0; i < mCinemas.length(); i++ ) {
-        				Cinema c = getCinemaFromJSONObject(mCinemas.getJSONObject(i));
-        				if(  mCinemas.get(i) != null ) {
+        				if(  mCinemas.getJSONObject(i) != null ) {
+        					Cinema c = getCinemaFromJSONObject(mCinemas.getJSONObject(i));
         					mPCinemaData.add(c);
         					mCinemaData.add(((JSONObject) mCinemas.get(i)).getString("name"));
         				}
@@ -182,8 +220,7 @@ public class CineWorldService extends Service {
 				
 			case FILM:
 				try {
-                	
-        			jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
+                	jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
         			mFilms = jsonObject.getJSONArray("films");
         			mFilmData = new ArrayList<String>();
         			mPFilmData = new FilmList();
@@ -244,14 +281,41 @@ public class CineWorldService extends Service {
 				}
 				
 				break;
+				
+			case DATE_TIMES:
+				
+				try {
+					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
+					mFilmPerformance = obj.getJSONArray("performances");
+					mPFilmPerformanceData = new PerformanceList();
+					for( int i = 0; i < mFilmPerformance.length(); i++ ) {
+						if( mFilmPerformance.getJSONObject(i) != null ) {
+							Performance p = getPerformanceFromJSONObject( mFilmPerformance.getJSONObject(i) );
+							mPFilmPerformanceData.add(p);
+						}
+					}
+					
+					extraData = mPFilmPerformanceData;
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				break;
+				
 		}
 		
-		broadcastDataLoaded(id);
+		broadcastDataLoaded(id, extraData);
 	}
 	
-	protected void broadcastDataLoaded( Ids id ) {
+	protected void broadcastDataLoaded( Ids id, Parcelable data ) {
 		Intent i = new Intent( CINEWORLD_DATA_LOADED );
 		i.putExtra("id", id );
+		
+		if( data != null ) {
+			i.putExtra( "data", data);
+		}
+		
 		sendBroadcast( i );
 	}
 	
@@ -267,12 +331,32 @@ public class CineWorldService extends Service {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
+		mFilmDates = null;
+		mFilmDatesData = null;
+		
 		String cinemaId = mCurrentCinema.getId();
 		String filmId = mCurrentFilm.getEdi();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.FILM_DATES;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
+		Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
+	}
+	
+	private void updatePerformancesForFilm( String date ) {
+		if( mCurrentCinema == null || mCurrentFilm == null )
+			return;
+		
+		mFilmPerformance = null;
+		mPFilmPerformanceData = null;
+		
+		String cinemaId = mCurrentCinema.getId();
+		String filmId = mCurrentFilm.getEdi();
+		
+		FetchDataTask fdt = new FetchDataTask();
+		fdt.id = Ids.DATE_TIMES;
+		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 	}
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {
@@ -319,9 +403,35 @@ public class CineWorldService extends Service {
 		}
 		catch( JSONException error ) {
 			//TODO more validation
+			error.printStackTrace();
 		}
 		
 		return c;
+	}
+	
+	private Performance getPerformanceFromJSONObject( JSONObject jsonObject ) {
+		Performance p = new Performance();
+		
+		try {
+			if( jsonObject.has("time"))
+				p.setTime( jsonObject.getString("time") );
+			if( jsonObject.has("available"))
+				p.setAvailable( jsonObject.getBoolean("available") );
+			if( jsonObject.has("type"))
+				p.setType( jsonObject.getString("type"));
+			if( jsonObject.has("ad"))
+				p.setAd( jsonObject.getBoolean("ad"));
+			if( jsonObject.has("subtitled"))
+				p.setSubtitled( jsonObject.getBoolean("subtitled"));
+			if( jsonObject.has("booking_url"))
+				p.setBookingUrl( jsonObject.getString("booking_url"));
+		}
+		catch( JSONException error ) {
+			//TODO more validation
+			error.printStackTrace();
+		}
+			
+		return p;
 	}
 
 	public class LocalBinder extends Binder {
