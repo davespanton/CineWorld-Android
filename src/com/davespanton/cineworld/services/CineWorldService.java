@@ -17,6 +17,8 @@ import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 import com.davespanton.cineworld.data.Performance;
 import com.davespanton.cineworld.data.PerformanceList;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
 import android.app.Service;
 import android.content.Intent;
@@ -24,11 +26,12 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.util.Log;
 
 public class CineWorldService extends Service {
 	
 	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
+	
+	private static final Logger mog = LoggerFactory.getLogger(CineWorldService.class);
 	
 	private final Binder binder = new LocalBinder();
 	
@@ -213,7 +216,8 @@ public class CineWorldService extends Service {
         			}
         		}
                 catch( JSONException e ) {
-                	Log.e("CineWorld", "error in cinema jsonObject", e);
+                	e.printStackTrace();
+					mog.error(e.getMessage());
                 }
                 cinemaDataReady = true;
 				break;
@@ -237,7 +241,8 @@ public class CineWorldService extends Service {
         			}
         		}
 				catch( JSONException e ) {
-                	Log.e("CineWorld", "error in films jsonObject", e);
+					e.printStackTrace();
+					mog.error(e.getMessage());
                 }
 				filmDataReady = true;
 				break;
@@ -261,8 +266,8 @@ public class CineWorldService extends Service {
         				}
         			}
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					mog.error(e.getMessage());
 				}
 				break;
 				
@@ -276,8 +281,8 @@ public class CineWorldService extends Service {
 						mFilmDatesData.add( mFilmDates.getString(i) );
 					}
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					mog.error(e.getMessage());
 				}
 				
 				break;
@@ -297,8 +302,8 @@ public class CineWorldService extends Service {
 					
 					extraData = mPFilmPerformanceData;
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					mog.error(e.getMessage());
 				}
 				
 				break;
@@ -325,9 +330,10 @@ public class CineWorldService extends Service {
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 	}
 	
-	private void updateDatesForFilm() {
+	/*private void updateDatesForFilm() {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
@@ -340,8 +346,8 @@ public class CineWorldService extends Service {
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.FILM_DATES;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
-		Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
-	}
+		//Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
+	}*/
 	
 	private void updatePerformancesForFilm( String date ) {
 		if( mCurrentCinema == null || mCurrentFilm == null )
@@ -356,7 +362,7 @@ public class CineWorldService extends Service {
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.DATE_TIMES;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-		Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 	}
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {

@@ -3,6 +3,11 @@ package com.davespanton.cineworld;
 import com.davespanton.cineworld.activities.CinemaListActivity;
 import com.davespanton.cineworld.activities.FilmListActivity;
 import com.davespanton.cineworld.services.CineWorldService;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
+import com.google.code.microlog4android.appender.FileAppender;
+import com.google.code.microlog4android.config.PropertyConfigurator;
+import com.google.code.microlog4android.format.PatternFormatter;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -21,6 +26,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 public class Main extends Activity {
+	
+	private static final Logger mog = LoggerFactory.getLogger(Main.class);
     
 	private static final int VIEW_CINEMAS = 0;
 	private static final int VIEW_FILMS = 1;
@@ -40,33 +47,48 @@ public class Main extends Activity {
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-       super.onCreate(savedInstanceState);
-       setContentView(R.layout.main);
+       
+    	super.onCreate(savedInstanceState);
+    	
+    	PropertyConfigurator propConfig = PropertyConfigurator.getConfigurator(this);
+    	propConfig.configure();
+    	
+    	PatternFormatter patternFormatter = new PatternFormatter();
+    	patternFormatter.setPattern("%c %d [%P] %m %T");
+    	
+    	FileAppender fileAppender = new FileAppender();
+    	fileAppender.setFileName("cineworld.log");
+    	fileAppender.setFormatter(patternFormatter);
+    	mog.addAppender(fileAppender);
+    	
+    	mog.debug("Main onCreate");
+    	
+    	setContentView(R.layout.main);
         
-       mCinemaButton = (Button) findViewById(R.id.cinema_button);
-       mFilmButton = (Button) findViewById(R.id.film_button);
+    	mCinemaButton = (Button) findViewById(R.id.cinema_button);
+    	mFilmButton = (Button) findViewById(R.id.film_button);
         
-       mCinemaButton.setOnClickListener( new OnClickListener() {
+    	mCinemaButton.setOnClickListener( new OnClickListener() {
 			
-    	   @Override
+	    	@Override
 			public void onClick(View v) {
 				startCinemaActivity();
 			}
 		
-       });
+    	});
         
-       mFilmButton.setOnClickListener( new OnClickListener() {
+    	mFilmButton.setOnClickListener( new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				startFilmActivity( FilmListActivity.Types.ALL );
 			}
 		
-       });
+      	});
         
-       bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
+    	bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
        
-       loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
+    	loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
     }
     
 	@Override
@@ -74,6 +96,8 @@ public class Main extends Activity {
 		super.onDestroy();
 		
 		unbindService(service);
+		
+		mog.debug("Main onDestroy");
 	}
 
 	@Override

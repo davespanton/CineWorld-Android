@@ -18,7 +18,7 @@ public class CinemaList extends ArrayList<Cinema> implements Parcelable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+	public static final Parcelable.Creator CREATOR = new Parcelable.Creator() { 
 
 		@Override
 		public Object createFromParcel(Parcel in) {
@@ -51,7 +51,7 @@ public class CinemaList extends ArrayList<Cinema> implements Parcelable {
 	}
 
 	@Override
-	public void writeToParcel(Parcel dest, int flags) {
+	public void writeToParcel(Parcel dest, int flags) { 
 		int size = this.size();
 		
 		dest.writeInt(size);
