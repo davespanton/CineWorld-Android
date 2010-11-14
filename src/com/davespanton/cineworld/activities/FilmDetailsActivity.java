@@ -14,10 +14,13 @@ import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 import com.davespanton.cineworld.services.CineWorldService.Ids;
 import com.github.droidfu.widgets.WebImageView;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -28,6 +31,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,6 +44,8 @@ public class FilmDetailsActivity extends Activity {
 
 	private static final int DATE_DIALOG_ID = 0;
 	
+	private Logger mog = LoggerFactory.getLogger( FilmDetailsActivity.class );
+	
 	private TmdbService tmdbService;
 	private CineWorldService cineworldService;
 	
@@ -48,6 +54,8 @@ public class FilmDetailsActivity extends Activity {
 	private int mYear;
     private int mMonth;
     private int mDay;
+    
+    private ProgressDialog mLoaderDialog;
 	
 	//private TextView body;
 	
@@ -57,8 +65,7 @@ public class FilmDetailsActivity extends Activity {
 	}
 	
 	protected void onCineworldServiceConnected() {
-		if( cineworldService.getDatesForCurrentFilm() != null )
-			Log.v( "DATE CONN", cineworldService.getDatesForCurrentFilm().toString() );
+		
 	}
 	
 	@Override
@@ -123,6 +130,9 @@ public class FilmDetailsActivity extends Activity {
 		
 		unregisterReceiver(tmdbReceiver);
 		unregisterReceiver(cineworldReceiver);
+		
+		if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+			mLoaderDialog.dismiss();
 	}
 
 	@Override
@@ -132,6 +142,8 @@ public class FilmDetailsActivity extends Activity {
 		
 		registerReceiver(tmdbReceiver, new IntentFilter(TmdbService.TMDB_DATA_LOADED));
 		registerReceiver(cineworldReceiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		
+		//TODO	resume progress dialog?
 	}
 	
 	private void updateImageView( ImageView target, Drawable image ) {
@@ -150,6 +162,10 @@ public class FilmDetailsActivity extends Activity {
 		return null;
 	}
 	
+	protected void showLoaderDialog() {
+		mLoaderDialog = ProgressDialog.show( this, "", getString(R.string.loading_data) );
+	}
+	
 	private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
 
 		@Override
@@ -164,7 +180,8 @@ public class FilmDetailsActivity extends Activity {
 			else
 				day = Integer.toString(dayOfMonth);
 				
-			cineworldService.requestPerformancesForCurrentFilm( Integer.toString(year) + Integer.toString(monthOfYear) + day );
+			cineworldService.requestPerformancesForCurrentFilm( Integer.toString(year) + Integer.toString(monthOfYear+1) + day );
+			showLoaderDialog();
 		}
 		
 	};
@@ -200,6 +217,12 @@ public class FilmDetailsActivity extends Activity {
 		
 	};
 	
+	private void startPerformancesActivity(PerformanceList performances) {
+		Intent i = new Intent(this, PerformanceListActivity.class);
+		i.putExtra( "data", (Parcelable) performances );
+		startActivity(i);
+	}
+	
 	private BroadcastReceiver tmdbReceiver = new BroadcastReceiver() {
 		
 		@Override
@@ -223,17 +246,20 @@ public class FilmDetailsActivity extends Activity {
 			
 			switch( (Ids) intent.getSerializableExtra("id") ) {
 				case FILM_DATES:
-					//TODO enable dates/times button
-					Log.d("Cineworld data rec", cineworldService.getDatesForCurrentFilm().toString() );
+					
+					//	currently unused
+					
 					break;
 				case DATE_TIMES:
-					//PerformanceList performances = (PerformanceList) intent.getSerializableExtra("data");
-					
-					Log.d("Cineworld data rec", "rec" );
+					if( mLoaderDialog != null && mLoaderDialog.isShowing() ) {
+						mLoaderDialog.dismiss();
+						PerformanceList performances = (PerformanceList) intent.getSerializableExtra("data");
+						mog.debug( "Performance data received: " + Integer.toString(performances.size()) );
+						startPerformancesActivity( performances );
+					}
 					break;
 			}
 		}
-		
 	};
 	
 	class FetchImageTask extends AsyncTask< String, Void, Object > {

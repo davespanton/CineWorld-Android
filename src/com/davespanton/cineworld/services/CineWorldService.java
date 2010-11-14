@@ -214,11 +214,13 @@ public class CineWorldService extends Service {
         					mCinemaData.add(((JSONObject) mCinemas.get(i)).getString("name"));
         				}
         			}
-        		}
-                catch( JSONException e ) {
+        		} catch( JSONException e ) {
                 	e.printStackTrace();
 					mog.error(e.getMessage());
-                }
+                } catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
+				}
+                
                 cinemaDataReady = true;
 				break;
 				
@@ -239,11 +241,13 @@ public class CineWorldService extends Service {
         					}
         				}
         			}
-        		}
-				catch( JSONException e ) {
+        		} catch( JSONException e ) {
 					e.printStackTrace();
 					mog.error(e.getMessage());
-                }
+                } catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
+				}
+		
 				filmDataReady = true;
 				break;
 				
@@ -268,7 +272,10 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error(e.getMessage());
+				} catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
 				}
+				
 				break;
 				
 			case FILM_DATES:
@@ -304,7 +311,10 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error(e.getMessage());
+				} catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
 				}
+				
 				
 				break;
 				

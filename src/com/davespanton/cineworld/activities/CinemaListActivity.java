@@ -177,7 +177,8 @@ public class CinemaListActivity extends ListActivity {
 			
 			switch( id ) {
 				case CINEMA_FILM:
-						loaderDialog.dismiss();
+						if( loaderDialog != null && loaderDialog.isShowing() )
+							loaderDialog.dismiss();
 						startFilmActivity();
 					break;
 			}

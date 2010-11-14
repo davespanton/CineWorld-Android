@@ -18,4 +18,6 @@
 <string name="tmdb_more_info">Find more info from tmdb</string>
 <string name="dates_times">Dates and times</string>
 
+<string name="performance_times">Performance times</string>
+<string name="film_details">Film details</string>
 </resources>

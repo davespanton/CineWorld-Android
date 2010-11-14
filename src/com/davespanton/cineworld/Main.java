@@ -19,6 +19,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,7 +36,7 @@ public class Main extends Activity {
 	private Button mCinemaButton;
 	private Button mFilmButton;
 		
-	private CineWorldService cineWorldService;
+	private CineWorldService cineWorldService = null;
 	
 	private ProgressDialog loaderDialog;
 	
@@ -88,7 +89,7 @@ public class Main extends Activity {
         
     	bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
        
-    	loaderDialog = ProgressDialog.show(Main.this, "", "Loading data. Please wait...");
+    	loaderDialog = ProgressDialog.show( Main.this, "",  getString(R.string.loading_data) );
     }
     
 	@Override
@@ -114,12 +115,16 @@ public class Main extends Activity {
 	@Override
 	protected void onResume() {
 		
+		mog.debug( "Main onResume: data ready... " + Boolean.toString(checkDataReady()) );
 		super.onResume();
 		
 		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
 		
 		if( checkDataReady() && loaderDialog.isShowing() )
 			loaderDialog.dismiss();
+		else if( !checkDataReady() && !loaderDialog.isShowing()) {
+			loaderDialog = ProgressDialog.show(this, "", getString(R.string.loading_data));
+		}
 	}
 
 	@Override
@@ -193,8 +198,10 @@ public class Main extends Activity {
 			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
 			
 			switch( id ) {
+				
 				case CINEMA:
 				case FILM:
+					mog.debug( id.toString() + " received data ready " + Boolean.toString(checkDataReady()) );
 					if( checkDataReady()) 
 						loaderDialog.dismiss();
 					break;
