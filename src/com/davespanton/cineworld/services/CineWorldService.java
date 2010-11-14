@@ -183,7 +183,7 @@ public class CineWorldService extends Service {
 		
 		super.onDestroy();
 		
-		// TODO cleanup
+		// TODO some cleanup
 	}
 
 	@Override
@@ -216,7 +216,7 @@ public class CineWorldService extends Service {
         			}
         		} catch( JSONException e ) {
                 	e.printStackTrace();
-					mog.error(e.getMessage());
+                	mog.error( "JSONException for CINEMA. " + result.content );
                 } catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 				}
@@ -243,7 +243,7 @@ public class CineWorldService extends Service {
         			}
         		} catch( JSONException e ) {
 					e.printStackTrace();
-					mog.error(e.getMessage());
+					mog.error( "JSONException for FILM. " + result.content );
                 } catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 				}
@@ -271,7 +271,7 @@ public class CineWorldService extends Service {
         			}
 				} catch (JSONException e) {
 					e.printStackTrace();
-					mog.error(e.getMessage());
+					mog.error( "JSONException for CINEMA_FILM. " + result.content );
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 				}
@@ -310,7 +310,7 @@ public class CineWorldService extends Service {
 					extraData = mPFilmPerformanceData;
 				} catch (JSONException e) {
 					e.printStackTrace();
-					mog.error(e.getMessage());
+					mog.error( "JSONException for DATE_TIMES. " + result.content );
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 				}
