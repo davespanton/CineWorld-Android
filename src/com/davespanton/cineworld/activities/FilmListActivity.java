@@ -63,14 +63,19 @@ public class FilmListActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.films);
 		
-		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
-		
 		type = (Types) getIntent().getSerializableExtra("type");
 	}
 	
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+	protected void onResume() {
+		super.onResume();
+		
+		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
 		
 		unbindService(service);
 	}
