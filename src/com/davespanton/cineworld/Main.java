@@ -109,7 +109,8 @@ public class Main extends Activity {
 		if( loaderDialog != null && loaderDialog.isShowing() )
 			loaderDialog.dismiss();
 		
-		unregisterReceiver(receiver);
+		unregisterReceiver(dataReceiver);
+		unregisterReceiver(errorReceiver);
 	}
 
 	@Override
@@ -118,7 +119,8 @@ public class Main extends Activity {
 		mog.debug( "Main onResume: data ready... " + Boolean.toString(checkDataReady()) );
 		super.onResume();
 		
-		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		registerReceiver(dataReceiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		registerReceiver(errorReceiver, new IntentFilter(CineWorldService.CINEWORLD_ERROR));
 		
 		if( checkDataReady() && loaderDialog.isShowing() )
 			loaderDialog.dismiss();
@@ -190,7 +192,7 @@ public class Main extends Activity {
 		}
 	};
 	
-	private BroadcastReceiver receiver = new BroadcastReceiver() {
+	private BroadcastReceiver dataReceiver = new BroadcastReceiver() {
 		
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -212,5 +214,16 @@ public class Main extends Activity {
 			}
 			
 		}
+	};
+	
+	private BroadcastReceiver errorReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			//if( loaderDialog != null && loaderDialog.isShowing() )
+			//	TODO	alert user of error
+		}
+		
 	};
 }

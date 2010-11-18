@@ -30,6 +30,7 @@ import android.os.Parcelable;
 public class CineWorldService extends Service {
 	
 	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
+	public static final String CINEWORLD_ERROR = "com.davespanton.cineworld.services.CineWorldErrorEvent";
 	
 	private static final Logger mog = LoggerFactory.getLogger(CineWorldService.class);
 	
@@ -195,6 +196,7 @@ public class CineWorldService extends Service {
 	protected void processResult( Ids id, HttpData result ) {
 		
 		Parcelable extraData = null;
+		boolean error = false;;
 		
 		switch( id )
 		{
@@ -217,11 +219,15 @@ public class CineWorldService extends Service {
         		} catch( JSONException e ) {
                 	e.printStackTrace();
                 	mog.error( "JSONException for CINEMA. " + result.content );
+                	error = true;
                 } catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
+					error = true;
 				}
                 
-                cinemaDataReady = true;
+                if( !error )
+                	cinemaDataReady = true;
+                
 				break;
 				
 			case FILM:
@@ -244,11 +250,15 @@ public class CineWorldService extends Service {
         		} catch( JSONException e ) {
 					e.printStackTrace();
 					mog.error( "JSONException for FILM. " + result.content );
+					error = true;
                 } catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
+					error = true;
 				}
 		
-				filmDataReady = true;
+				if( !error )
+					filmDataReady = true;
+				
 				break;
 				
 			case CINEMA_FILM:
@@ -272,8 +282,10 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for CINEMA_FILM. " + result.content );
+					error = true;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
+					error = true;
 				}
 				
 				break;
@@ -290,6 +302,7 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error(e.getMessage());
+					error = true;
 				}
 				
 				break;
@@ -311,8 +324,10 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
+					error = true;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
+					error = true;
 				}
 				
 				
@@ -320,7 +335,14 @@ public class CineWorldService extends Service {
 				
 		}
 		
-		broadcastDataLoaded(id, extraData);
+		if( !error ) 
+			broadcastDataLoaded(id, extraData);
+		else {
+			Intent i = new Intent( CINEWORLD_ERROR );
+			i.putExtra("id", id);
+			sendBroadcast( i );
+		}
+			
 	}
 	
 	protected void broadcastDataLoaded( Ids id, Parcelable data ) {
