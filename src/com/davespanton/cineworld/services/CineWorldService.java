@@ -68,26 +68,31 @@ public class CineWorldService extends Service {
 	private boolean cinemaDataReady = false;
 	private boolean filmDataReady = false;
 	
-	public CinemaList getCinemaList() {
-		return mPCinemaData;
+	public void requestCinemaList() {
+		if( cinemaDataReady ) {
+			broadcastDataLoaded(Ids.CINEMA, mPCinemaData);
+		}
+		//else
+			//TODO	request for cinema data or wait. 
 	}
 		
-	public FilmList getFilmList() {
-		return mPFilmData;
+	public void requestFilmList() {
+		if( filmDataReady ) {
+			broadcastDataLoaded(Ids.FILM, mPFilmData);
+		}
+		//else
+			//TODO	request for film data or wait.
 	}
 		
-	public FilmList getFilmListForCurrentCinema() {
-		return mPCinemaFilmData;
+	public void requestFilmListForCinema( String id ) {
+		//TODO implement a hashmap of films-for-cinemas, check it and either broadcast data or request it
 	}
 		
 	//TODO return a token from this request?
-	public boolean requestPerformancesForCurrentFilm( String date ) {
-		if( mCurrentFilm != null ) {
-			updatePerformancesForFilm(date);
-			return true;
-		}
+	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
+		//TODO	implemet a hasmap of performances-for-filmcinema data, check it and broadcast data or request it
 		
-		return false;
+		updatePerformancesForFilm(date, cinemaId, filmId);
 	}
 	
 	public boolean getCinemaDataReady() {
@@ -98,48 +103,7 @@ public class CineWorldService extends Service {
 		return filmDataReady;
 	}
 	
-	public Cinema getCurrentCinema() {
-		return mCurrentCinema;
-	}
 	
-	public void setCurrentCinema( int index ) {
-		
-		if( mPCinemaData.get(index) == mCurrentCinema ) {
-			broadcastDataLoaded( Ids.CINEMA_FILM, null );
-			return;
-		}
-		else if( index > (mPCinemaData.size()-1) ) {
-			return;
-		}
-		
-		mCurrentCinema = mPCinemaData.get(index);
-		
-		updateFilmsForCinema();
-	}
-	
-	public void clearCurrentCinema() {
-		mCurrentCinema = null;
-	}
-	
-	public Film getCurrentFilm() {
-		return mCurrentFilm;
-	}
-	
-	
-	public void setCurrentFilm( int index, boolean all ) {
-		
-		FilmList source = all ? mPFilmData : mPCinemaFilmData;
-		
-		if( source.get(index) == mCurrentFilm )
-			return;
-		else if( index > (source.size()-1))
-			return;
-		
-		mCurrentFilm = source.get(index);
-		
-		//unused at the moment - using a date picker instead of constantly polling for availble dates
-		//updateDatesForFilm();
-	}
 	
 	@Override
 	public void onCreate() {
@@ -357,14 +321,14 @@ public class CineWorldService extends Service {
 		//Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
 	}*/
 	
-	private void updatePerformancesForFilm( String date ) {
+	private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
 		mPFilmPerformanceData = null;
 		
-		String cinemaId = mCurrentCinema.getId();
-		String filmId = mCurrentFilm.getEdi();
+		//String cinemaId = mCurrentCinema.getId();
+		//String filmId = mCurrentFilm.getEdi();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.DATE_TIMES;
