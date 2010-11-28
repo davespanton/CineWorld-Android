@@ -39,31 +39,23 @@ public class CineWorldService extends Service {
 	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
 	
 	// Cinema data
-	private JSONArray mCinemas;
 	private ArrayList<String> mCinemaData;
 	private CinemaList mPCinemaData;
-	
-	
+		
 	// Films data
-	
-	private JSONArray mFilms;
 	private ArrayList<String> mFilmData;
 	private FilmList mPFilmData;
 	
 	// Films for selected cinema data.
-	
-	private JSONArray mCinemaFilms;
 	private ArrayList<String> mCinemaFilmData;
 	private FilmList mPCinemaFilmData;
 	
 	// Film date data
-	
 	private JSONArray mFilmDates;
 	private ArrayList<String> mFilmDatesData = null;
 	
 	// Performance data
-	
-	private JSONArray mFilmPerformance;
+	//private JSONArray mFilmPerformance;
 	private PerformanceList mPFilmPerformanceData;
 	
 	// Current selection data
@@ -79,31 +71,15 @@ public class CineWorldService extends Service {
 	public CinemaList getCinemaList() {
 		return mPCinemaData;
 	}
-	
-	public ArrayList<String> getCinemaNames() {
-		return mCinemaData;
-	}
-	
+		
 	public FilmList getFilmList() {
 		return mPFilmData;
 	}
-	
-	public ArrayList<String> getFilmNames() {
-		return mFilmData;
-	}
-	
+		
 	public FilmList getFilmListForCurrentCinema() {
 		return mPCinemaFilmData;
 	}
-	
-	public ArrayList<String> getFilmNamesForCurrentCinema() {
-		return mCinemaFilmData;
-	}
-	
-	public ArrayList<String> getDatesForCurrentFilm() {
-		return mFilmDatesData;
-	}
-	
+		
 	//TODO return a token from this request?
 	public boolean requestPerformancesForCurrentFilm( String date ) {
 		if( mCurrentFilm != null ) {
@@ -205,15 +181,15 @@ public class CineWorldService extends Service {
                 
 				try {
         			jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
-        			mCinemas = jsonObject.getJSONArray("cinemas");
+        			JSONArray cinemas = jsonObject.getJSONArray("cinemas");
         			mCinemaData = new ArrayList<String>();
         			mPCinemaData = new CinemaList();
         			
-        			for( int i = 0; i < mCinemas.length(); i++ ) {
-        				if(  mCinemas.getJSONObject(i) != null ) {
-        					Cinema c = getCinemaFromJSONObject(mCinemas.getJSONObject(i));
+        			for( int i = 0; i < cinemas.length(); i++ ) {
+        				if(  cinemas.getJSONObject(i) != null ) {
+        					Cinema c = getCinemaFromJSONObject(cinemas.getJSONObject(i));
         					mPCinemaData.add(c);
-        					mCinemaData.add(((JSONObject) mCinemas.get(i)).getString("name"));
+        					mCinemaData.add(((JSONObject) cinemas.get(i)).getString("name"));
         				}
         			}
         		} catch( JSONException e ) {
@@ -233,17 +209,17 @@ public class CineWorldService extends Service {
 			case FILM:
 				try {
                 	jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
-        			mFilms = jsonObject.getJSONArray("films");
+        			JSONArray films = jsonObject.getJSONArray("films");
         			mFilmData = new ArrayList<String>();
         			mPFilmData = new FilmList();
         			
-        			for( int i = 0; i < mFilms.length(); i++ ) {
-        				if(  mFilms.get(i) != null )
+        			for( int i = 0; i < films.length(); i++ ) {
+        				if(  films.get(i) != null )
         				{
-        					Film f = getFilmFromJSONObject(mFilms.getJSONObject(i));
+        					Film f = getFilmFromJSONObject(films.getJSONObject(i));
         					if( f.validate()) {
         						mPFilmData.add( f );
-        						mFilmData.add(((JSONObject) mFilms.get(i)).getString("title"));
+        						mFilmData.add(((JSONObject) films.get(i)).getString("title"));
         					}
         				}
         			}
@@ -265,17 +241,17 @@ public class CineWorldService extends Service {
 				
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
-					mCinemaFilms = obj.getJSONArray("films");
+					JSONArray cinemaFilms = obj.getJSONArray("films");
 					mCinemaFilmData = new ArrayList<String>();
 					mPCinemaFilmData = new FilmList();
-					for( int i = 0; i < mCinemaFilms.length(); i++ ) {
-        				if(  mCinemaFilms.get(i) != null )
+					for( int i = 0; i < cinemaFilms.length(); i++ ) {
+        				if(  cinemaFilms.get(i) != null )
         				{
-        					Film f = getFilmFromJSONObject(mCinemaFilms.getJSONObject(i));
+        					Film f = getFilmFromJSONObject(cinemaFilms.getJSONObject(i));
         					if( f.validate() ) {
         						
         						mPCinemaFilmData.add( f );
-        						mCinemaFilmData.add(((JSONObject) mCinemaFilms.get(i)).getString("title"));
+        						mCinemaFilmData.add(((JSONObject) cinemaFilms.get(i)).getString("title"));
         					}
         				}
         			}
@@ -311,11 +287,11 @@ public class CineWorldService extends Service {
 				
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
-					mFilmPerformance = obj.getJSONArray("performances");
+					JSONArray filmPerformance = obj.getJSONArray("performances");
 					mPFilmPerformanceData = new PerformanceList();
-					for( int i = 0; i < mFilmPerformance.length(); i++ ) {
-						if( mFilmPerformance.getJSONObject(i) != null ) {
-							Performance p = getPerformanceFromJSONObject( mFilmPerformance.getJSONObject(i) );
+					for( int i = 0; i < filmPerformance.length(); i++ ) {
+						if( filmPerformance.getJSONObject(i) != null ) {
+							Performance p = getPerformanceFromJSONObject( filmPerformance.getJSONObject(i) );
 							mPFilmPerformanceData.add(p);
 						}
 					}
@@ -385,7 +361,6 @@ public class CineWorldService extends Service {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
-		mFilmPerformance = null;
 		mPFilmPerformanceData = null;
 		
 		String cinemaId = mCurrentCinema.getId();

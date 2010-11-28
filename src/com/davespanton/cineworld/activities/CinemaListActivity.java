@@ -15,11 +15,14 @@ import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
@@ -42,12 +45,14 @@ public class CinemaListActivity extends ListActivity {
 	
 	public void onConnected() {
 		
-		setListAdapter( new ArrayAdapter<String>( 
+		/*setListAdapter( new ArrayAdapter<String>( 
 				this, 
 				R.layout.list_layout, 
-				cineWorldService.getCinemaNames()));
+				cineWorldService.getCinemaNames()));*/
 		
 		mCinemaList = cineWorldService.getCinemaList();
+		
+		setListAdapter( new CinemaAdapter() );
 		
 		registerForContextMenu(getListView());
 	}
@@ -186,4 +191,24 @@ public class CinemaListActivity extends ListActivity {
 		}
 	};
 	
+	@SuppressWarnings("unchecked")
+	class CinemaAdapter extends ArrayAdapter {
+
+		public CinemaAdapter() {
+			super(CinemaListActivity.this, R.id.list_text, mCinemaList);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			
+			LayoutInflater inflator = getLayoutInflater();
+			View row = inflator.inflate(R.layout.list_layout, parent, false);
+			TextView label = (TextView) row.findViewById(R.id.list_text);
+			
+			label.setText( mCinemaList.get(position).getName() );
+			
+			return (row);
+			
+		}
+	};
 }

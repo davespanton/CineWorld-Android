@@ -9,11 +9,14 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
@@ -37,23 +40,19 @@ public class FilmListActivity extends ListActivity {
 	
 	public void onConnected() {
 		
-		ArrayList<String> data = null;
-		
 		switch( type )
 		{
 			//TODO assumes data is ready. maybe better to put loader here than on previous activity?
 			case ALL:
-				data = cineWorldService.getFilmNames();
 				mFilmList = cineWorldService.getFilmList();
 				break;
 			
 			case CINEMA:
-				data = cineWorldService.getFilmNamesForCurrentCinema();
 				mFilmList = cineWorldService.getFilmListForCurrentCinema();
 				break;
 		}
 		
-		setListAdapter( new ArrayAdapter<String>( this, R.layout.list_layout, data));
+		setListAdapter( new FilmAdapter() );
 		registerForContextMenu( getListView() );
 	}
 	
@@ -141,5 +140,25 @@ public class FilmListActivity extends ListActivity {
 		}
 		
 	};
+	
+	@SuppressWarnings("unchecked")
+	class FilmAdapter extends ArrayAdapter {
 
+		public FilmAdapter() {
+			super(FilmListActivity.this, R.id.list_text, mFilmList);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			
+			LayoutInflater inflator = getLayoutInflater();
+			View row = inflator.inflate(R.layout.list_layout, parent, false);
+			TextView label = (TextView) row.findViewById(R.id.list_text);
+			
+			label.setText( mFilmList.get(position).getTitle() );
+			
+			return (row);
+			
+		}
+	};
 }
