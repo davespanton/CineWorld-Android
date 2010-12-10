@@ -180,7 +180,7 @@ public class FilmDetailsActivity extends Activity {
 			else
 				day = Integer.toString(dayOfMonth);
 				
-			cineworldService.requestPerformancesForCurrentFilm( Integer.toString(year) + Integer.toString(monthOfYear+1) + day );
+			cineworldService.requestPerformancesForFilmCinema( Integer.toString(year), Integer.toString(monthOfYear+1), day );
 			showLoaderDialog();
 		}
 		

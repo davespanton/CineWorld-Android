@@ -169,8 +169,6 @@ public class Main extends Activity {
 	}
 	
 	private void startFilmActivity( FilmListActivity.Types type ) {
-		cineWorldService.clearCurrentCinema();
-		
 		Intent i = new Intent( this, FilmListActivity.class);
 		
 		i.putExtra( "type", type );

@@ -3,8 +3,11 @@ package com.davespanton.cineworld.activities;
 
 import java.util.ArrayList;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -20,9 +23,11 @@ import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.activities.CinemaListActivity.CinemaAdapter;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 import com.davespanton.cineworld.services.CineWorldService;
+import com.davespanton.cineworld.services.CineWorldService.Ids;
 
 public class FilmListActivity extends ListActivity {
 
@@ -44,11 +49,12 @@ public class FilmListActivity extends ListActivity {
 		{
 			//TODO assumes data is ready. maybe better to put loader here than on previous activity?
 			case ALL:
-				mFilmList = cineWorldService.getFilmList();
+				//TODO link this up with the return broadcast from the service
+				cineWorldService.requestFilmList();
 				break;
 			
 			case CINEMA:
-				mFilmList = cineWorldService.getFilmListForCurrentCinema();
+				cineWorldService.requestFilmListForCinema("");
 				break;
 		}
 		
@@ -70,6 +76,7 @@ public class FilmListActivity extends ListActivity {
 		super.onResume();
 		
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
+		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
 	}
 	
 	@Override
@@ -77,6 +84,7 @@ public class FilmListActivity extends ListActivity {
 		super.onPause();
 		
 		unbindService(service);
+		unregisterReceiver(receiver);
 	}
 	
 	@Override
@@ -107,7 +115,6 @@ public class FilmListActivity extends ListActivity {
 		
 		super.onListItemClick(l, v, position, id);
 		
-		cineWorldService.setCurrentFilm( position, type == Types.ALL );
 		mSelectedIndex = position;
 		
 		startFilmDetailsActivity();
@@ -139,6 +146,25 @@ public class FilmListActivity extends ListActivity {
 			cineWorldService = null;
 		}
 		
+	};
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
+			
+			switch( id ) {
+				case FILM:
+				case CINEMA_FILM:
+						mFilmList = (FilmList) intent.getSerializableExtra("data");
+						setListAdapter( new FilmAdapter() );
+						registerForContextMenu(getListView());
+					break;
+			}
+			
+		}
 	};
 	
 	@SuppressWarnings("unchecked")
