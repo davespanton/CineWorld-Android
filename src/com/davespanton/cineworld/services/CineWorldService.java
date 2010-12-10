@@ -1,6 +1,7 @@
 package com.davespanton.cineworld.services;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +48,7 @@ public class CineWorldService extends Service {
 	
 	// Films for selected cinema data.
 	private FilmList mPCinemaFilmData;
+	private HashMap<String, FilmList> mCinemaFilmData = new HashMap<String, FilmList>();
 	
 	// Film date data
 	private JSONArray mFilmDates;
@@ -55,13 +57,7 @@ public class CineWorldService extends Service {
 	// Performance data
 	private PerformanceList mPFilmPerformanceData;
 	
-	// Current selection data
-	
-	private Cinema mCurrentCinema;
-	private Film mCurrentFilm;
-	
 	// Flags indicating if Cinema and Film data are loaded. 
-	
 	private boolean cinemaDataReady = false;
 	private boolean filmDataReady = false;
 	
@@ -70,7 +66,7 @@ public class CineWorldService extends Service {
 			broadcastDataLoaded(Ids.CINEMA, mPCinemaData);
 		}
 		//else
-			//TODO	request for cinema data or wait. 
+			//TODO	request for cinema data and wait. 
 	}
 		
 	public void requestFilmList() {
@@ -78,18 +74,27 @@ public class CineWorldService extends Service {
 			broadcastDataLoaded(Ids.FILM, mPFilmData);
 		}
 		//else
-			//TODO	request for film data or wait.
+			//TODO	request for film data and wait.
 	}
-		
+	
 	public void requestFilmListForCinema( String id ) {
-		//TODO implement a hashmap of films-for-cinemas, check it and either broadcast data or request it
+		if( mCinemaFilmData.containsKey(id) ) {
+			broadcastDataLoaded(Ids.CINEMA_FILM, mCinemaFilmData.get(id));
+		}
+		else {
+			// TODO add the request id to the fetch task so it can be added to the hashmap on return.
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.CINEMA_FILM;
+			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+			mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		}
 	}
 		
 	//TODO return a token from this request?
 	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
 		//TODO	implement a hashmap of performances-for-filmcinema data, check it and broadcast data or request it
 		
-		updatePerformancesForFilm(date, cinemaId, filmId);
+		//updatePerformancesForFilm(date, cinemaId, filmId);
 	}
 	
 	public boolean getCinemaDataReady() {
@@ -291,14 +296,14 @@ public class CineWorldService extends Service {
 		sendBroadcast( i );
 	}
 	
-	private void updateFilmsForCinema() {
+	/*private void updateFilmsForCinema() {
 		String id = mCurrentCinema.getId();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-	}
+	}*/
 	
 	/*private void updateDatesForFilm() {
 		if( mCurrentCinema == null || mCurrentFilm == null )
@@ -316,7 +321,7 @@ public class CineWorldService extends Service {
 		//Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
 	}*/
 	
-	private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
+	/*private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
@@ -329,7 +334,7 @@ public class CineWorldService extends Service {
 		fdt.id = Ids.DATE_TIMES;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 		mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-	}
+	}*/
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {
 		
