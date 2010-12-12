@@ -47,7 +47,6 @@ public class CineWorldService extends Service {
 	private FilmList mPFilmData;
 	
 	// Films for selected cinema data.
-	private FilmList mPCinemaFilmData;
 	private HashMap<String, FilmList> mCinemaFilmData = new HashMap<String, FilmList>();
 	
 	// Film date data
@@ -56,6 +55,9 @@ public class CineWorldService extends Service {
 	
 	// Performance data
 	private PerformanceList mPFilmPerformanceData;
+	
+	// Performance lists for film-cinema combinations. 
+	private HashMap<String, PerformanceList> mPerformanceData = new HashMap<String, PerformanceList>();
 	
 	// Flags indicating if Cinema and Film data are loaded. 
 	private boolean cinemaDataReady = false;
@@ -85,6 +87,7 @@ public class CineWorldService extends Service {
 			// TODO add the request id to the fetch task so it can be added to the hashmap on return.
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.CINEMA_FILM;
+			fdt.data = id;
 			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 			mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		}
@@ -92,9 +95,18 @@ public class CineWorldService extends Service {
 		
 	//TODO return a token from this request?
 	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
-		//TODO	implement a hashmap of performances-for-filmcinema data, check it and broadcast data or request it
+		String data = date + cinemaId + filmId;
 		
-		//updatePerformancesForFilm(date, cinemaId, filmId);
+		if( mPerformanceData.containsKey(data)) {
+			broadcastDataLoaded(Ids.DATE_TIMES, mPerformanceData.get(data));
+		}
+		else {
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.DATE_TIMES;
+			fdt.data = data;
+			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+			mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		}
 	}
 	
 	public boolean getCinemaDataReady() {
@@ -104,9 +116,7 @@ public class CineWorldService extends Service {
 	public boolean getFilmDataReady() {
 		return filmDataReady;
 	}
-	
-	
-	
+		
 	@Override
 	public void onCreate() {
 		
@@ -135,12 +145,12 @@ public class CineWorldService extends Service {
 		return binder;
 	}
 	
-	protected void processResult( Ids id, HttpData result ) {
+	protected void processResult( FetchDataTask fetch, HttpData result ) {
 		
 		Parcelable extraData = null;
 		boolean error = false;;
 		
-		switch( id )
+		switch( fetch.id )
 		{
 			case CINEMA:
 				JSONObject jsonObject = null;
@@ -166,9 +176,9 @@ public class CineWorldService extends Service {
 					error = true;
 				}
                 
-                if( !error )
+                if( !error ) {
                 	cinemaDataReady = true;
-                
+                }
 				break;
 				
 			case FILM:
@@ -204,21 +214,21 @@ public class CineWorldService extends Service {
 				
 			case CINEMA_FILM:
 				
+				FilmList cinemaFilmData = new FilmList();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray cinemaFilms = obj.getJSONArray("films");
-					mPCinemaFilmData = new FilmList();
 					for( int i = 0; i < cinemaFilms.length(); i++ ) {
         				if(  cinemaFilms.get(i) != null )
         				{
         					Film f = getFilmFromJSONObject(cinemaFilms.getJSONObject(i));
         					if( f.validate() ) {
         						
-        						mPCinemaFilmData.add( f );
+        						cinemaFilmData.add( f );
         					}
         				}
         			}
-					extraData = mPCinemaFilmData;
+					
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for CINEMA_FILM. " + result.content );
@@ -226,6 +236,11 @@ public class CineWorldService extends Service {
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 					error = true;
+				}
+				
+				if( !error ) {
+					extraData = cinemaFilmData;
+					mCinemaFilmData.put(fetch.data.toString(), cinemaFilmData);
 				}
 				
 				break;
@@ -248,11 +263,11 @@ public class CineWorldService extends Service {
 				break;
 				
 			case DATE_TIMES:
-				
+				mPFilmPerformanceData = new PerformanceList();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray filmPerformance = obj.getJSONArray("performances");
-					mPFilmPerformanceData = new PerformanceList();
+					
 					for( int i = 0; i < filmPerformance.length(); i++ ) {
 						if( filmPerformance.getJSONObject(i) != null ) {
 							Performance p = getPerformanceFromJSONObject( filmPerformance.getJSONObject(i) );
@@ -260,7 +275,7 @@ public class CineWorldService extends Service {
 						}
 					}
 					
-					extraData = mPFilmPerformanceData;
+					
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
@@ -270,16 +285,19 @@ public class CineWorldService extends Service {
 					error = true;
 				}
 				
+				if( !error ) {
+					extraData = mPFilmPerformanceData;
+					mPerformanceData.put(fetch.data, mPFilmPerformanceData);
+				}
 				
 				break;
-				
 		}
 		
 		if( !error ) 
-			broadcastDataLoaded(id, extraData);
+			broadcastDataLoaded(fetch.id, extraData);
 		else {
 			Intent i = new Intent( CINEWORLD_ERROR );
-			i.putExtra("id", id);
+			i.putExtra("id", fetch.id);
 			sendBroadcast( i );
 		}
 			
@@ -418,8 +436,16 @@ public class CineWorldService extends Service {
 	}
 	
 	class FetchDataTask extends AsyncTask<String, Void, HttpData> {
-
+		
+		/**
+		 * Identifies the type of request.  
+		 */
 		public Ids id;
+		
+		/**
+		 * A string that, combined with the above id can be used to identify the hashmap value to save results to.
+		 */
+		public String data;
 		
 		@Override
 		protected HttpData doInBackground(String... url) {
@@ -434,7 +460,7 @@ public class CineWorldService extends Service {
 			
 			super.onPostExecute(result);
 			
-			processResult( id, result );
+			processResult( this, result );
 		}
 		
 	}

@@ -96,6 +96,8 @@ public class FilmDetailsActivity extends Activity {
 		
 		Button showDates = (Button) findViewById( R.id.date_times );
 		
+		showDates.setEnabled( getIntent().getStringExtra("cinemaId") != null );
+		
 		showDates.setOnClickListener( new OnClickListener() {
 
 			@Override
@@ -179,8 +181,15 @@ public class FilmDetailsActivity extends Activity {
 				day = "0" + Integer.toString(dayOfMonth);
 			else
 				day = Integer.toString(dayOfMonth);
-				
-			cineworldService.requestPerformancesForFilmCinema( Integer.toString(year), Integer.toString(monthOfYear+1), day );
+			
+			
+			//TODO	check that the extra values exist in the below call.
+			cineworldService.requestPerformancesForFilmCinema( 
+					Integer.toString(year) + Integer.toString(monthOfYear+1) + day, 
+					getIntent().getStringExtra("cinemaId"), 
+					getIntent().getStringExtra("filmId") 
+			);
+			
 			showLoaderDialog();
 		}
 		

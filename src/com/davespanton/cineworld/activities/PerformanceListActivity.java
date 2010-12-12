@@ -30,6 +30,8 @@ public class PerformanceListActivity extends ListActivity {
 		setContentView(R.layout.performances);
 		setListAdapter( new PerformanceAdapter() );
 	}
+	
+	
 
 	@SuppressWarnings("unchecked")
 	class PerformanceAdapter extends ArrayAdapter {

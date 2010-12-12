@@ -3,6 +3,7 @@ package com.davespanton.cineworld.activities;
 
 import java.util.ArrayList;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,15 +24,17 @@ import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.davespanton.cineworld.R;
-import com.davespanton.cineworld.activities.CinemaListActivity.CinemaAdapter;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 import com.davespanton.cineworld.services.CineWorldService;
-import com.davespanton.cineworld.services.CineWorldService.Ids;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
 public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
+	
+	private static final Logger mog = LoggerFactory.getLogger(FilmListActivity.class);
 	
 	public enum Types { ALL, CINEMA };
 	
@@ -39,11 +42,17 @@ public class FilmListActivity extends ListActivity {
 
 	private FilmList mFilmList;
 	
+	private String mCinemaId = null;
+	
 	private CineWorldService cineWorldService;
 	
 	private Types type = Types.ALL;
+
+	private ProgressDialog mLoaderDialog;
 	
 	public void onConnected() {
+		
+		mCinemaId = getIntent().getStringExtra("cinemaId");
 		
 		switch( type )
 		{
@@ -54,12 +63,12 @@ public class FilmListActivity extends ListActivity {
 				break;
 			
 			case CINEMA:
-				cineWorldService.requestFilmListForCinema("");
+				cineWorldService.requestFilmListForCinema(mCinemaId);
 				break;
 		}
 		
-		setListAdapter( new FilmAdapter() );
-		registerForContextMenu( getListView() );
+		//setListAdapter( new FilmAdapter() );
+		//registerForContextMenu( getListView() );
 	}
 	
 	@Override
@@ -75,8 +84,13 @@ public class FilmListActivity extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		
+		mCinemaId = null;
+		
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
+		
 		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		
+		mLoaderDialog = ProgressDialog.show(FilmListActivity.this, "", getString(R.string.loading_data) );
 	}
 	
 	@Override
@@ -129,6 +143,8 @@ public class FilmListActivity extends ListActivity {
 		i.putExtra( "title", f.getTitle() );
 		i.putExtra( "rating", f.getRating() );
 		i.putExtra( "advisory", f.getAdvisory() );
+		i.putExtra( "cinemaId", mCinemaId );
+		i.putExtra( "filmId", f.getEdi() );
 		
 		startActivity(i);
 	}
@@ -158,6 +174,9 @@ public class FilmListActivity extends ListActivity {
 			switch( id ) {
 				case FILM:
 				case CINEMA_FILM:
+						if( mLoaderDialog != null && mLoaderDialog.isShowing())
+							mLoaderDialog.dismiss();
+					
 						mFilmList = (FilmList) intent.getSerializableExtra("data");
 						setListAdapter( new FilmAdapter() );
 						registerForContextMenu(getListView());

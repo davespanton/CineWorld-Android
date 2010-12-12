@@ -81,8 +81,9 @@ public class CinemaListActivity extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		cineWorldService.requestFilmListForCinema( mCinemaList.get(position).getId() );
-		loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
+		//cineWorldService.requestFilmListForCinema( mCinemaList.get(position).getId() );
+		//loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
+		startFilmActivity(mCinemaList.get(position).getId());
 	}
 
 	@Override
@@ -138,9 +139,10 @@ public class CinemaListActivity extends ListActivity {
 		return alert;
 	}
 	
-	private void startFilmActivity() {
+	private void startFilmActivity( String cinemaId ) {
 		Intent i = new Intent( this, FilmListActivity.class);
 		i.putExtra( "type", FilmListActivity.Types.CINEMA );
+		i.putExtra( "cinemaId", cinemaId);
 		startActivity(i);
 	}
 	
@@ -167,11 +169,6 @@ public class CinemaListActivity extends ListActivity {
 			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
 			
 			switch( id ) {
-				case CINEMA_FILM:
-						if( loaderDialog != null && loaderDialog.isShowing() )
-							loaderDialog.dismiss();
-						startFilmActivity();
-					break;
 				case CINEMA:
 						mCinemaList = (CinemaList) intent.getSerializableExtra("data");
 						setListAdapter( new CinemaAdapter() );
