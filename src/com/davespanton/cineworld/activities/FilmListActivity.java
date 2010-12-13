@@ -1,7 +1,6 @@
 package com.davespanton.cineworld.activities;
 
 
-import java.util.ArrayList;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -34,6 +33,7 @@ public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
 	
+	@SuppressWarnings("unused")
 	private static final Logger mog = LoggerFactory.getLogger(FilmListActivity.class);
 	
 	public enum Types { ALL, CINEMA };

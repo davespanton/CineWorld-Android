@@ -40,7 +40,6 @@ public class CineWorldService extends Service {
 	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
 	
 	// Cinema data
-	//private ArrayList<String> mCinemaData;
 	private CinemaList mPCinemaData;
 		
 	// Films data
@@ -66,17 +65,13 @@ public class CineWorldService extends Service {
 	public void requestCinemaList() {
 		if( cinemaDataReady ) {
 			broadcastDataLoaded(Ids.CINEMA, mPCinemaData);
-		}
-		//else
-			//TODO	request for cinema data and wait. 
+		} 
 	}
 		
 	public void requestFilmList() {
 		if( filmDataReady ) {
 			broadcastDataLoaded(Ids.FILM, mPFilmData);
 		}
-		//else
-			//TODO	request for film data and wait.
 	}
 	
 	public void requestFilmListForCinema( String id ) {
@@ -84,7 +79,6 @@ public class CineWorldService extends Service {
 			broadcastDataLoaded(Ids.CINEMA_FILM, mCinemaFilmData.get(id));
 		}
 		else {
-			// TODO add the request id to the fetch task so it can be added to the hashmap on return.
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.CINEMA_FILM;
 			fdt.data = id;
@@ -93,7 +87,6 @@ public class CineWorldService extends Service {
 		}
 	}
 		
-	//TODO return a token from this request?
 	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
 		String data = date + cinemaId + filmId;
 		
@@ -133,10 +126,7 @@ public class CineWorldService extends Service {
 
 	@Override
 	public void onDestroy() {
-		
 		super.onDestroy();
-		
-		// TODO some cleanup
 	}
 
 	@Override

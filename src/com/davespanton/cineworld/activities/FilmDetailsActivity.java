@@ -13,7 +13,6 @@ import com.davespanton.cineworld.data.PerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 import com.davespanton.cineworld.services.CineWorldService.Ids;
-import com.github.droidfu.widgets.WebImageView;
 import com.google.code.microlog4android.Logger;
 import com.google.code.microlog4android.LoggerFactory;
 
