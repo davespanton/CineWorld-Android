@@ -1,10 +1,13 @@
 package com.davespanton.cineworld.activities;
 
 
-import java.util.ArrayList;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,10 +26,15 @@ import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 import com.davespanton.cineworld.services.CineWorldService;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
 public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
+	
+	@SuppressWarnings("unused")
+	private static final Logger mog = LoggerFactory.getLogger(FilmListActivity.class);
 	
 	public enum Types { ALL, CINEMA };
 	
@@ -34,26 +42,33 @@ public class FilmListActivity extends ListActivity {
 
 	private FilmList mFilmList;
 	
+	private String mCinemaId = null;
+	
 	private CineWorldService cineWorldService;
 	
 	private Types type = Types.ALL;
+
+	private ProgressDialog mLoaderDialog;
 	
 	public void onConnected() {
+		
+		mCinemaId = getIntent().getStringExtra("cinemaId");
 		
 		switch( type )
 		{
 			//TODO assumes data is ready. maybe better to put loader here than on previous activity?
 			case ALL:
-				mFilmList = cineWorldService.getFilmList();
+				//TODO link this up with the return broadcast from the service
+				cineWorldService.requestFilmList();
 				break;
 			
 			case CINEMA:
-				mFilmList = cineWorldService.getFilmListForCurrentCinema();
+				cineWorldService.requestFilmListForCinema(mCinemaId);
 				break;
 		}
 		
-		setListAdapter( new FilmAdapter() );
-		registerForContextMenu( getListView() );
+		//setListAdapter( new FilmAdapter() );
+		//registerForContextMenu( getListView() );
 	}
 	
 	@Override
@@ -69,7 +84,13 @@ public class FilmListActivity extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		
+		mCinemaId = null;
+		
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
+		
+		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		
+		mLoaderDialog = ProgressDialog.show(FilmListActivity.this, "", getString(R.string.loading_data) );
 	}
 	
 	@Override
@@ -77,6 +98,7 @@ public class FilmListActivity extends ListActivity {
 		super.onPause();
 		
 		unbindService(service);
+		unregisterReceiver(receiver);
 	}
 	
 	@Override
@@ -107,7 +129,6 @@ public class FilmListActivity extends ListActivity {
 		
 		super.onListItemClick(l, v, position, id);
 		
-		cineWorldService.setCurrentFilm( position, type == Types.ALL );
 		mSelectedIndex = position;
 		
 		startFilmDetailsActivity();
@@ -122,6 +143,8 @@ public class FilmListActivity extends ListActivity {
 		i.putExtra( "title", f.getTitle() );
 		i.putExtra( "rating", f.getRating() );
 		i.putExtra( "advisory", f.getAdvisory() );
+		i.putExtra( "cinemaId", mCinemaId );
+		i.putExtra( "filmId", f.getEdi() );
 		
 		startActivity(i);
 	}
@@ -139,6 +162,28 @@ public class FilmListActivity extends ListActivity {
 			cineWorldService = null;
 		}
 		
+	};
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
+			
+			switch( id ) {
+				case FILM:
+				case CINEMA_FILM:
+						if( mLoaderDialog != null && mLoaderDialog.isShowing())
+							mLoaderDialog.dismiss();
+					
+						mFilmList = (FilmList) intent.getSerializableExtra("data");
+						setListAdapter( new FilmAdapter() );
+						registerForContextMenu(getListView());
+					break;
+			}
+			
+		}
 	};
 	
 	@SuppressWarnings("unchecked")

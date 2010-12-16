@@ -19,7 +19,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -169,8 +168,6 @@ public class Main extends Activity {
 	}
 	
 	private void startFilmActivity( FilmListActivity.Types type ) {
-		cineWorldService.clearCurrentCinema();
-		
 		Intent i = new Intent( this, FilmListActivity.class);
 		
 		i.putExtra( "type", type );

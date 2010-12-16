@@ -1,6 +1,7 @@
 package com.davespanton.cineworld.services;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,55 +40,66 @@ public class CineWorldService extends Service {
 	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
 	
 	// Cinema data
-	private ArrayList<String> mCinemaData;
 	private CinemaList mPCinemaData;
 		
 	// Films data
-	private ArrayList<String> mFilmData;
 	private FilmList mPFilmData;
 	
 	// Films for selected cinema data.
-	private ArrayList<String> mCinemaFilmData;
-	private FilmList mPCinemaFilmData;
+	private HashMap<String, FilmList> mCinemaFilmData = new HashMap<String, FilmList>();
 	
 	// Film date data
 	private JSONArray mFilmDates;
 	private ArrayList<String> mFilmDatesData = null;
 	
 	// Performance data
-	//private JSONArray mFilmPerformance;
 	private PerformanceList mPFilmPerformanceData;
 	
-	// Current selection data
-	
-	private Cinema mCurrentCinema;
-	private Film mCurrentFilm;
+	// Performance lists for film-cinema combinations. 
+	private HashMap<String, PerformanceList> mPerformanceData = new HashMap<String, PerformanceList>();
 	
 	// Flags indicating if Cinema and Film data are loaded. 
-	
 	private boolean cinemaDataReady = false;
 	private boolean filmDataReady = false;
 	
-	public CinemaList getCinemaList() {
-		return mPCinemaData;
+	public void requestCinemaList() {
+		if( cinemaDataReady ) {
+			broadcastDataLoaded(Ids.CINEMA, mPCinemaData);
+		} 
 	}
 		
-	public FilmList getFilmList() {
-		return mPFilmData;
-	}
-		
-	public FilmList getFilmListForCurrentCinema() {
-		return mPCinemaFilmData;
-	}
-		
-	//TODO return a token from this request?
-	public boolean requestPerformancesForCurrentFilm( String date ) {
-		if( mCurrentFilm != null ) {
-			updatePerformancesForFilm(date);
-			return true;
+	public void requestFilmList() {
+		if( filmDataReady ) {
+			broadcastDataLoaded(Ids.FILM, mPFilmData);
 		}
+	}
+	
+	public void requestFilmListForCinema( String id ) {
+		if( mCinemaFilmData.containsKey(id) ) {
+			broadcastDataLoaded(Ids.CINEMA_FILM, mCinemaFilmData.get(id));
+		}
+		else {
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.CINEMA_FILM;
+			fdt.data = id;
+			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+			mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		}
+	}
 		
-		return false;
+	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
+		String data = date + cinemaId + filmId;
+		
+		if( mPerformanceData.containsKey(data)) {
+			broadcastDataLoaded(Ids.DATE_TIMES, mPerformanceData.get(data));
+		}
+		else {
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.DATE_TIMES;
+			fdt.data = data;
+			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+			mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		}
 	}
 	
 	public boolean getCinemaDataReady() {
@@ -97,50 +109,7 @@ public class CineWorldService extends Service {
 	public boolean getFilmDataReady() {
 		return filmDataReady;
 	}
-	
-	public Cinema getCurrentCinema() {
-		return mCurrentCinema;
-	}
-	
-	public void setCurrentCinema( int index ) {
 		
-		if( mPCinemaData.get(index) == mCurrentCinema ) {
-			broadcastDataLoaded( Ids.CINEMA_FILM, null );
-			return;
-		}
-		else if( index > (mPCinemaData.size()-1) ) {
-			return;
-		}
-		
-		mCurrentCinema = mPCinemaData.get(index);
-		
-		updateFilmsForCinema();
-	}
-	
-	public void clearCurrentCinema() {
-		mCurrentCinema = null;
-	}
-	
-	public Film getCurrentFilm() {
-		return mCurrentFilm;
-	}
-	
-	
-	public void setCurrentFilm( int index, boolean all ) {
-		
-		FilmList source = all ? mPFilmData : mPCinemaFilmData;
-		
-		if( source.get(index) == mCurrentFilm )
-			return;
-		else if( index > (source.size()-1))
-			return;
-		
-		mCurrentFilm = source.get(index);
-		
-		//unused at the moment - using a date picker instead of constantly polling for availble dates
-		//updateDatesForFilm();
-	}
-	
 	@Override
 	public void onCreate() {
 		
@@ -157,10 +126,7 @@ public class CineWorldService extends Service {
 
 	@Override
 	public void onDestroy() {
-		
 		super.onDestroy();
-		
-		// TODO some cleanup
 	}
 
 	@Override
@@ -169,12 +135,12 @@ public class CineWorldService extends Service {
 		return binder;
 	}
 	
-	protected void processResult( Ids id, HttpData result ) {
+	protected void processResult( FetchDataTask fetch, HttpData result ) {
 		
 		Parcelable extraData = null;
 		boolean error = false;;
 		
-		switch( id )
+		switch( fetch.id )
 		{
 			case CINEMA:
 				JSONObject jsonObject = null;
@@ -182,16 +148,15 @@ public class CineWorldService extends Service {
 				try {
         			jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
         			JSONArray cinemas = jsonObject.getJSONArray("cinemas");
-        			mCinemaData = new ArrayList<String>();
         			mPCinemaData = new CinemaList();
         			
         			for( int i = 0; i < cinemas.length(); i++ ) {
         				if(  cinemas.getJSONObject(i) != null ) {
         					Cinema c = getCinemaFromJSONObject(cinemas.getJSONObject(i));
         					mPCinemaData.add(c);
-        					mCinemaData.add(((JSONObject) cinemas.get(i)).getString("name"));
         				}
         			}
+        			extraData = mPCinemaData;
         		} catch( JSONException e ) {
                 	e.printStackTrace();
                 	mog.error( "JSONException for CINEMA. " + result.content );
@@ -201,16 +166,15 @@ public class CineWorldService extends Service {
 					error = true;
 				}
                 
-                if( !error )
+                if( !error ) {
                 	cinemaDataReady = true;
-                
+                }
 				break;
 				
 			case FILM:
 				try {
                 	jsonObject = (JSONObject) new JSONTokener(result.content).nextValue();
         			JSONArray films = jsonObject.getJSONArray("films");
-        			mFilmData = new ArrayList<String>();
         			mPFilmData = new FilmList();
         			
         			for( int i = 0; i < films.length(); i++ ) {
@@ -219,10 +183,11 @@ public class CineWorldService extends Service {
         					Film f = getFilmFromJSONObject(films.getJSONObject(i));
         					if( f.validate()) {
         						mPFilmData.add( f );
-        						mFilmData.add(((JSONObject) films.get(i)).getString("title"));
         					}
         				}
         			}
+        			
+        			extraData = mPFilmData;
         		} catch( JSONException e ) {
 					e.printStackTrace();
 					mog.error( "JSONException for FILM. " + result.content );
@@ -239,22 +204,21 @@ public class CineWorldService extends Service {
 				
 			case CINEMA_FILM:
 				
+				FilmList cinemaFilmData = new FilmList();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray cinemaFilms = obj.getJSONArray("films");
-					mCinemaFilmData = new ArrayList<String>();
-					mPCinemaFilmData = new FilmList();
 					for( int i = 0; i < cinemaFilms.length(); i++ ) {
         				if(  cinemaFilms.get(i) != null )
         				{
         					Film f = getFilmFromJSONObject(cinemaFilms.getJSONObject(i));
         					if( f.validate() ) {
         						
-        						mPCinemaFilmData.add( f );
-        						mCinemaFilmData.add(((JSONObject) cinemaFilms.get(i)).getString("title"));
+        						cinemaFilmData.add( f );
         					}
         				}
         			}
+					
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for CINEMA_FILM. " + result.content );
@@ -262,6 +226,11 @@ public class CineWorldService extends Service {
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
 					error = true;
+				}
+				
+				if( !error ) {
+					extraData = cinemaFilmData;
+					mCinemaFilmData.put(fetch.data.toString(), cinemaFilmData);
 				}
 				
 				break;
@@ -284,11 +253,11 @@ public class CineWorldService extends Service {
 				break;
 				
 			case DATE_TIMES:
-				
+				mPFilmPerformanceData = new PerformanceList();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray filmPerformance = obj.getJSONArray("performances");
-					mPFilmPerformanceData = new PerformanceList();
+					
 					for( int i = 0; i < filmPerformance.length(); i++ ) {
 						if( filmPerformance.getJSONObject(i) != null ) {
 							Performance p = getPerformanceFromJSONObject( filmPerformance.getJSONObject(i) );
@@ -296,7 +265,7 @@ public class CineWorldService extends Service {
 						}
 					}
 					
-					extraData = mPFilmPerformanceData;
+					
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
@@ -306,16 +275,19 @@ public class CineWorldService extends Service {
 					error = true;
 				}
 				
+				if( !error ) {
+					extraData = mPFilmPerformanceData;
+					mPerformanceData.put(fetch.data, mPFilmPerformanceData);
+				}
 				
 				break;
-				
 		}
 		
 		if( !error ) 
-			broadcastDataLoaded(id, extraData);
+			broadcastDataLoaded(fetch.id, extraData);
 		else {
 			Intent i = new Intent( CINEWORLD_ERROR );
-			i.putExtra("id", id);
+			i.putExtra("id", fetch.id);
 			sendBroadcast( i );
 		}
 			
@@ -332,14 +304,14 @@ public class CineWorldService extends Service {
 		sendBroadcast( i );
 	}
 	
-	private void updateFilmsForCinema() {
+	/*private void updateFilmsForCinema() {
 		String id = mCurrentCinema.getId();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-	}
+	}*/
 	
 	/*private void updateDatesForFilm() {
 		if( mCurrentCinema == null || mCurrentFilm == null )
@@ -357,20 +329,20 @@ public class CineWorldService extends Service {
 		//Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
 	}*/
 	
-	private void updatePerformancesForFilm( String date ) {
+	/*private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
 		if( mCurrentCinema == null || mCurrentFilm == null )
 			return;
 		
 		mPFilmPerformanceData = null;
 		
-		String cinemaId = mCurrentCinema.getId();
-		String filmId = mCurrentFilm.getEdi();
+		//String cinemaId = mCurrentCinema.getId();
+		//String filmId = mCurrentFilm.getEdi();
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.DATE_TIMES;
 		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 		mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-	}
+	}*/
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {
 		
@@ -454,8 +426,16 @@ public class CineWorldService extends Service {
 	}
 	
 	class FetchDataTask extends AsyncTask<String, Void, HttpData> {
-
+		
+		/**
+		 * Identifies the type of request.  
+		 */
 		public Ids id;
+		
+		/**
+		 * A string that, combined with the above id can be used to identify the hashmap value to save results to.
+		 */
+		public String data;
 		
 		@Override
 		protected HttpData doInBackground(String... url) {
@@ -470,7 +450,7 @@ public class CineWorldService extends Service {
 			
 			super.onPostExecute(result);
 			
-			processResult( id, result );
+			processResult( this, result );
 		}
 		
 	}

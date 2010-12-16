@@ -3,6 +3,6 @@ import java.util.Hashtable;
 
 public class HttpData {
       public String content;
-      public Hashtable cookies = new Hashtable();
-      public Hashtable headers = new Hashtable();
+      public Hashtable<Object, String> cookies = new Hashtable<Object, String>();
+      public Hashtable<Object, String> headers = new Hashtable<Object, String>();
 }

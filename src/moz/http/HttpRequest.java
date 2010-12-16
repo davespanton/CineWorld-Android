@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-import org.apache.http.client.HttpClient;
-import org.apache.commons.*;
 import android.util.Log;
 /**
 * HTTP Request class
@@ -57,7 +55,14 @@ import android.util.Log;
 * @author Moazzam Khan
 */
 public class HttpRequest {
- 
+		
+		/**
+		 * Timeout used for all requests.
+		 * 
+		 * @default 0 (infinite)
+		 */
+		public static int timeout = 0;
+	
         /**
         * HttpGet request
         *
@@ -71,7 +76,7 @@ public class HttpRequest {
                 try {
                         URL url = new URL(sUrl);
                         URLConnection con = url.openConnection();
- 
+                        con.setConnectTimeout(timeout);
                         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                         while ((str = in.readLine()) != null) {
                                 buff.append(str);
@@ -128,11 +133,12 @@ public class HttpRequest {
         public static HttpData post(String sUrl, String data) {
                 StringBuffer ret = new StringBuffer();
                 HttpData dat = new HttpData();
-                String header;
+                
                 try {
                         // Send data
                         URL url = new URL(sUrl);
                         URLConnection conn = url.openConnection();
+                        conn.setConnectTimeout(timeout);
                         conn.setDoOutput(true);
                         OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
                         wr.write(data);
@@ -194,6 +200,7 @@ public class HttpRequest {
  
                         URL url = new URL(sUrl);
                         HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                        con.setConnectTimeout(timeout);
                         con.setDoInput(true);
                         con.setDoOutput(true);
                         con.setUseCaches(false);
@@ -228,7 +235,7 @@ public class HttpRequest {
                         }
                         // Now write the data
  
-                        Enumeration keys = params.keys();
+                        Enumeration<String> keys = params.keys();
                         String key, val;
                         while (keys.hasMoreElements()) {
                                 key = keys.nextElement().toString();

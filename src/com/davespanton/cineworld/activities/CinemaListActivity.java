@@ -43,20 +43,6 @@ public class CinemaListActivity extends ListActivity {
 	
 	private ProgressDialog loaderDialog;
 	
-	public void onConnected() {
-		
-		/*setListAdapter( new ArrayAdapter<String>( 
-				this, 
-				R.layout.list_layout, 
-				cineWorldService.getCinemaNames()));*/
-		
-		mCinemaList = cineWorldService.getCinemaList();
-		
-		setListAdapter( new CinemaAdapter() );
-		
-		registerForContextMenu(getListView());
-	}
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
@@ -95,8 +81,9 @@ public class CinemaListActivity extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		cineWorldService.setCurrentCinema( position );
-		loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
+		//cineWorldService.requestFilmListForCinema( mCinemaList.get(position).getId() );
+		//loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
+		startFilmActivity(mCinemaList.get(position).getId());
 	}
 
 	@Override
@@ -152,9 +139,10 @@ public class CinemaListActivity extends ListActivity {
 		return alert;
 	}
 	
-	private void startFilmActivity() {
+	private void startFilmActivity( String cinemaId ) {
 		Intent i = new Intent( this, FilmListActivity.class);
 		i.putExtra( "type", FilmListActivity.Types.CINEMA );
+		i.putExtra( "cinemaId", cinemaId);
 		startActivity(i);
 	}
 	
@@ -164,7 +152,7 @@ public class CinemaListActivity extends ListActivity {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			cineWorldService = ((CineWorldService.LocalBinder)service).getService();
-			onConnected();
+			cineWorldService.requestCinemaList();
 		}
 		
 		@Override
@@ -181,10 +169,10 @@ public class CinemaListActivity extends ListActivity {
 			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
 			
 			switch( id ) {
-				case CINEMA_FILM:
-						if( loaderDialog != null && loaderDialog.isShowing() )
-							loaderDialog.dismiss();
-						startFilmActivity();
+				case CINEMA:
+						mCinemaList = (CinemaList) intent.getSerializableExtra("data");
+						setListAdapter( new CinemaAdapter() );
+						registerForContextMenu(getListView());
 					break;
 			}
 			

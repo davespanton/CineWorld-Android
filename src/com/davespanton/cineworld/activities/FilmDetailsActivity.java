@@ -13,7 +13,6 @@ import com.davespanton.cineworld.data.PerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 import com.davespanton.cineworld.services.CineWorldService.Ids;
-import com.github.droidfu.widgets.WebImageView;
 import com.google.code.microlog4android.Logger;
 import com.google.code.microlog4android.LoggerFactory;
 
@@ -95,6 +94,8 @@ public class FilmDetailsActivity extends Activity {
 		//body = (TextView) findViewById( R.id.film_body );
 		
 		Button showDates = (Button) findViewById( R.id.date_times );
+		
+		showDates.setEnabled( getIntent().getStringExtra("cinemaId") != null );
 		
 		showDates.setOnClickListener( new OnClickListener() {
 
@@ -179,8 +180,15 @@ public class FilmDetailsActivity extends Activity {
 				day = "0" + Integer.toString(dayOfMonth);
 			else
 				day = Integer.toString(dayOfMonth);
-				
-			cineworldService.requestPerformancesForCurrentFilm( Integer.toString(year) + Integer.toString(monthOfYear+1) + day );
+			
+			
+			//TODO	check that the extra values exist in the below call.
+			cineworldService.requestPerformancesForFilmCinema( 
+					Integer.toString(year) + Integer.toString(monthOfYear+1) + day, 
+					getIntent().getStringExtra("cinemaId"), 
+					getIntent().getStringExtra("filmId") 
+			);
+			
 			showLoaderDialog();
 		}
 		
