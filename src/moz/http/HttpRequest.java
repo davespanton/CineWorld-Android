@@ -57,7 +57,7 @@ import android.util.Log;
 public class HttpRequest {
 		
 		/**
-		 * Timeout used for all requests.
+		 * Timeout used for all requests, in milliseconds.
 		 * 
 		 * @default 0 (infinite)
 		 */

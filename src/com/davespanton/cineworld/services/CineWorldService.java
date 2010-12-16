@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.JSONArray;
-import org.json.JSONException;
+import org.json.JSONException; 
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -440,6 +440,7 @@ public class CineWorldService extends Service {
 		@Override
 		protected HttpData doInBackground(String... url) {
 
+			HttpRequest.timeout = 20000;
 			HttpData data = HttpRequest.get( url[0] );
 			
 			return data;
