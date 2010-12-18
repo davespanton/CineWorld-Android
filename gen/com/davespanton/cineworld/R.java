@@ -55,7 +55,9 @@ public final class R {
         public static final int overview=0x7f040009;
         public static final int performance_times=0x7f04000f;
         public static final int rating=0x7f04000b;
+        public static final int something_wrong=0x7f040011;
         public static final int tmdb_more_info=0x7f04000d;
+        public static final int try_again=0x7f040012;
         public static final int view_cinemas=0x7f040001;
         public static final int view_films=0x7f040002;
         public static final int view_info=0x7f040007;

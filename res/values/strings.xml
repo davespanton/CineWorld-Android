@@ -20,4 +20,6 @@
 
 <string name="performance_times">Performance times</string>
 <string name="film_details">Film details</string>
+<string name="something_wrong">Something seems to have gone wrong.</string>
+<string name="try_again">Please try again.</string>
 </resources>

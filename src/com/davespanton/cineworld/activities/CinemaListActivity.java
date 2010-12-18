@@ -68,6 +68,7 @@ public class CinemaListActivity extends ListActivity {
 			loaderDialog.dismiss();
 		
 		unregisterReceiver(receiver);
+		unregisterReceiver(errorReceiver);
 	}
 
 	@Override
@@ -76,6 +77,7 @@ public class CinemaListActivity extends ListActivity {
 		super.onResume();
 		
 		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		registerReceiver(errorReceiver, new IntentFilter(CineWorldService.CINEWORLD_ERROR));
 	}
 
 	@Override
@@ -165,7 +167,6 @@ public class CinemaListActivity extends ListActivity {
 		
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			
 			CineWorldService.Ids id = (CineWorldService.Ids) intent.getSerializableExtra("id");
 			
 			switch( id ) {
@@ -176,6 +177,25 @@ public class CinemaListActivity extends ListActivity {
 					break;
 			}
 			
+		}
+	};
+	
+	private BroadcastReceiver errorReceiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if( loaderDialog != null && loaderDialog.isShowing() )
+				loaderDialog.dismiss();
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			//TODO	move strings
+			builder.setMessage("An error occured!").setPositiveButton("Okay", new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					
+					
+				}
+			});
 		}
 	};
 	

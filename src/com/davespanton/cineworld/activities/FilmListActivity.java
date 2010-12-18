@@ -1,17 +1,21 @@
 package com.davespanton.cineworld.activities;
 
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,7 +37,6 @@ public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
 	
-	@SuppressWarnings("unused")
 	private static final Logger mog = LoggerFactory.getLogger(FilmListActivity.class);
 	
 	public enum Types { ALL, CINEMA };
@@ -56,19 +59,14 @@ public class FilmListActivity extends ListActivity {
 		
 		switch( type )
 		{
-			//TODO assumes data is ready. maybe better to put loader here than on previous activity?
 			case ALL:
-				//TODO link this up with the return broadcast from the service
 				cineWorldService.requestFilmList();
 				break;
 			
 			case CINEMA:
-				cineWorldService.requestFilmListForCinema(mCinemaId);
+				cineWorldService.requestFilmListForCinema(mCinemaId+"b");
 				break;
 		}
-		
-		//setListAdapter( new FilmAdapter() );
-		//registerForContextMenu( getListView() );
 	}
 	
 	@Override
@@ -89,6 +87,7 @@ public class FilmListActivity extends ListActivity {
 		bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE );
 		
 		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		registerReceiver(errorReceiver, new IntentFilter(CineWorldService.CINEWORLD_ERROR));
 		
 		mLoaderDialog = ProgressDialog.show(FilmListActivity.this, "", getString(R.string.loading_data) );
 	}
@@ -99,6 +98,7 @@ public class FilmListActivity extends ListActivity {
 		
 		unbindService(service);
 		unregisterReceiver(receiver);
+		unregisterReceiver(errorReceiver);
 	}
 	
 	@Override
@@ -184,6 +184,29 @@ public class FilmListActivity extends ListActivity {
 			}
 			
 		}
+	};
+	
+	private BroadcastReceiver errorReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+				mLoaderDialog.dismiss();
+			mog.debug("Received an error broadcast");
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			
+			builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.try_again))
+			.setPositiveButton(getString(R.string.okay), new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					finish();	
+				}
+			});
+			
+			AlertDialog alert = builder.create();
+			alert.show();
+		}
+		
 	};
 	
 	@SuppressWarnings("unchecked")
