@@ -17,12 +17,14 @@ import com.google.code.microlog4android.Logger;
 import com.google.code.microlog4android.LoggerFactory;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -131,6 +133,7 @@ public class FilmDetailsActivity extends Activity {
 		
 		unregisterReceiver(tmdbReceiver);
 		unregisterReceiver(cineworldReceiver);
+		unregisterReceiver(cineWorldErrorReceiver);
 		
 		if( mLoaderDialog != null && mLoaderDialog.isShowing() )
 			mLoaderDialog.dismiss();
@@ -143,6 +146,7 @@ public class FilmDetailsActivity extends Activity {
 		
 		registerReceiver(tmdbReceiver, new IntentFilter(TmdbService.TMDB_DATA_LOADED));
 		registerReceiver(cineworldReceiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
+		registerReceiver(cineWorldErrorReceiver, new IntentFilter(CineWorldService.CINEWORLD_ERROR));
 		
 		//TODO	resume progress dialog?
 	}
@@ -267,6 +271,31 @@ public class FilmDetailsActivity extends Activity {
 					}
 					break;
 			}
+		}
+	};
+	
+	private BroadcastReceiver cineWorldErrorReceiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+				mLoaderDialog.dismiss();
+			mog.debug("An error has occured.");
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			
+			builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.try_again))
+			.setPositiveButton(getString(R.string.okay), new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+			
+			AlertDialog alert = builder.create();
+			alert.show();
+			
 		}
 	};
 	

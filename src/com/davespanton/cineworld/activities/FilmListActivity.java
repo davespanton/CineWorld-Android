@@ -15,7 +15,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.ContextMenu;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -64,7 +63,7 @@ public class FilmListActivity extends ListActivity {
 				break;
 			
 			case CINEMA:
-				cineWorldService.requestFilmListForCinema(mCinemaId+"b");
+				cineWorldService.requestFilmListForCinema(mCinemaId);
 				break;
 		}
 	}

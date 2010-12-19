@@ -50,11 +50,9 @@ public class CineWorldService extends Service {
 	
 	// Film date data
 	private JSONArray mFilmDates;
-	private ArrayList<String> mFilmDatesData = null;
-	
-	// Performance data
-	private PerformanceList mPFilmPerformanceData;
-	
+	//private ArrayList<String> mFilmDatesData = null;
+	private HashMap<String, ArrayList<String>> mFilmDatesData = new HashMap<String, ArrayList<String>>(); 
+			
 	// Performance lists for film-cinema combinations. 
 	private HashMap<String, PerformanceList> mPerformanceData = new HashMap<String, PerformanceList>();
 	
@@ -64,19 +62,28 @@ public class CineWorldService extends Service {
 	
 	public void requestCinemaList() {
 		if( cinemaDataReady ) {
-			broadcastDataLoaded(Ids.CINEMA, mPCinemaData);
+			Intent i = new Intent( CINEWORLD_DATA_LOADED );
+			i.putExtra("id", Ids.CINEMA);
+			i.putExtra("data", (Parcelable) mPCinemaData);
+			sendBroadcast(i);
 		} 
 	}
 		
 	public void requestFilmList() {
 		if( filmDataReady ) {
-			broadcastDataLoaded(Ids.FILM, mPFilmData);
+			Intent i = new Intent( CINEWORLD_DATA_LOADED );
+			i.putExtra("id", Ids.FILM);
+			i.putExtra("data", (Parcelable) mPFilmData);
+			sendBroadcast(i);
 		}
 	}
 	
 	public void requestFilmListForCinema( String id ) {
 		if( mCinemaFilmData.containsKey(id) ) {
-			broadcastDataLoaded(Ids.CINEMA_FILM, mCinemaFilmData.get(id));
+			Intent i = new Intent( CINEWORLD_DATA_LOADED );
+			i.putExtra("id", Ids.CINEMA_FILM);
+			i.putExtra("data", (Parcelable) mCinemaFilmData.get(id));
+			sendBroadcast(i);
 		}
 		else {
 			FetchDataTask fdt = new FetchDataTask();
@@ -91,7 +98,10 @@ public class CineWorldService extends Service {
 		String data = date + cinemaId + filmId;
 		
 		if( mPerformanceData.containsKey(data)) {
-			broadcastDataLoaded(Ids.DATE_TIMES, mPerformanceData.get(data));
+			Intent i = new Intent(CINEWORLD_DATA_LOADED);
+			i.putExtra("id", Ids.DATE_TIMES);
+			i.putExtra("data", (Parcelable) mPerformanceData.get(data));
+			sendBroadcast(i);
 		}
 		else {
 			FetchDataTask fdt = new FetchDataTask();
@@ -137,8 +147,8 @@ public class CineWorldService extends Service {
 	
 	protected void processResult( FetchDataTask fetch, HttpData result ) {
 		
-		Parcelable extraData = null;
-		boolean error = false;;
+		Intent intent = new Intent( CINEWORLD_DATA_LOADED );
+		boolean error = false;
 		
 		switch( fetch.id )
 		{
@@ -156,7 +166,6 @@ public class CineWorldService extends Service {
         					mPCinemaData.add(c);
         				}
         			}
-        			extraData = mPCinemaData;
         		} catch( JSONException e ) {
                 	e.printStackTrace();
                 	mog.error( "JSONException for CINEMA. " + result.content );
@@ -168,6 +177,7 @@ public class CineWorldService extends Service {
                 
                 if( !error ) {
                 	cinemaDataReady = true;
+                	intent.putExtra("data", (Parcelable) mPCinemaData);
                 }
 				break;
 				
@@ -186,8 +196,6 @@ public class CineWorldService extends Service {
         					}
         				}
         			}
-        			
-        			extraData = mPFilmData;
         		} catch( JSONException e ) {
 					e.printStackTrace();
 					mog.error( "JSONException for FILM. " + result.content );
@@ -197,9 +205,10 @@ public class CineWorldService extends Service {
 					error = true;
 				}
 		
-				if( !error )
+				if( !error ) {
+					intent.putExtra("data", (Parcelable) mPFilmData);
 					filmDataReady = true;
-				
+				}
 				break;
 				
 			case CINEMA_FILM:
@@ -213,7 +222,6 @@ public class CineWorldService extends Service {
         				{
         					Film f = getFilmFromJSONObject(cinemaFilms.getJSONObject(i));
         					if( f.validate() ) {
-        						
         						cinemaFilmData.add( f );
         					}
         				}
@@ -229,20 +237,20 @@ public class CineWorldService extends Service {
 				}
 				
 				if( !error ) {
-					extraData = cinemaFilmData;
+					intent.putExtra("data", (Parcelable) cinemaFilmData);
 					mCinemaFilmData.put(fetch.data.toString(), cinemaFilmData);
 				}
 				
 				break;
 				
 			case FILM_DATES:
-				
+				ArrayList<String> filmDates = new ArrayList<String>();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					mFilmDates = obj.getJSONArray("dates");
-					mFilmDatesData = new ArrayList<String>();
+					
 					for( int i = 0; i < mFilmDates.length(); i++ ) {
-						mFilmDatesData.add( mFilmDates.getString(i) );
+						filmDates.add( mFilmDates.getString(i) );
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
@@ -250,10 +258,15 @@ public class CineWorldService extends Service {
 					error = true;
 				}
 				
+				if( !error ) {
+					intent.putStringArrayListExtra("data", filmDates);
+					mFilmDatesData.put(fetch.data.toString(), filmDates);
+				}
+				
 				break;
 				
 			case DATE_TIMES:
-				mPFilmPerformanceData = new PerformanceList();
+				PerformanceList filmPerformanceData = new PerformanceList();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray filmPerformance = obj.getJSONArray("performances");
@@ -261,7 +274,7 @@ public class CineWorldService extends Service {
 					for( int i = 0; i < filmPerformance.length(); i++ ) {
 						if( filmPerformance.getJSONObject(i) != null ) {
 							Performance p = getPerformanceFromJSONObject( filmPerformance.getJSONObject(i) );
-							mPFilmPerformanceData.add(p);
+							filmPerformanceData.add(p);
 						}
 					}
 					
@@ -276,32 +289,23 @@ public class CineWorldService extends Service {
 				}
 				
 				if( !error ) {
-					extraData = mPFilmPerformanceData;
-					mPerformanceData.put(fetch.data, mPFilmPerformanceData);
+					intent.putExtra("data", (Parcelable) filmPerformanceData);
+					mPerformanceData.put(fetch.data, filmPerformanceData);
 				}
 				
 				break;
 		}
 		
-		if( !error ) 
-			broadcastDataLoaded(fetch.id, extraData);
+		if( !error ) {
+			intent.putExtra("id", fetch.id);
+			sendBroadcast(intent);
+		}
 		else {
 			Intent i = new Intent( CINEWORLD_ERROR );
 			i.putExtra("id", fetch.id);
 			sendBroadcast( i );
 		}
 			
-	}
-	
-	protected void broadcastDataLoaded( Ids id, Parcelable data ) {
-		Intent i = new Intent( CINEWORLD_DATA_LOADED );
-		i.putExtra("id", id );
-		
-		if( data != null ) {
-			i.putExtra( "data", data);
-		}
-		
-		sendBroadcast( i );
 	}
 	
 	/*private void updateFilmsForCinema() {
