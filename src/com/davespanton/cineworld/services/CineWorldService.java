@@ -37,7 +37,7 @@ public class CineWorldService extends Service {
 	
 	private final Binder binder = new LocalBinder();
 	
-	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES };
+	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES, WEEK_TIMES };
 	
 	// Cinema data
 	private CinemaList mPCinemaData;
@@ -92,6 +92,10 @@ public class CineWorldService extends Service {
 			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 			mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		}
+	}
+	
+	public void requestPerformancesForFilmCinema( String cinemaId, String filmId )	{
+		// TODO make 7 requests :( using WEEK_TIMES id.
 	}
 		
 	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
