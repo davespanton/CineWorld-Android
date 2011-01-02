@@ -8,8 +8,11 @@ import com.davespanton.cineworld.services.CineWorldService;
 
 import android.app.Activity;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -34,6 +37,10 @@ public class DateListActivity extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		
+		unbindService(service);
+		
+		unregisterReceiver(receiver);
 	}
 
 	@Override
@@ -41,6 +48,8 @@ public class DateListActivity extends ListActivity {
 		super.onResume();
 		
 		bindService(new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
+		
+		registerReceiver(receiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
 	}
 	
 	private ServiceConnection service = new ServiceConnection() {
@@ -54,6 +63,16 @@ public class DateListActivity extends ListActivity {
 		public void onServiceDisconnected(ComponentName name) {
 			cineWorldService = null;
 		}
+	};
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	};
 	
 	@SuppressWarnings("unchecked")

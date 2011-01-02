@@ -322,6 +322,8 @@ public class CineWorldService extends Service {
 				break;
 			
 			case WEEK_TIMES:
+					//TODO 	create a class to handle holding several PerformanceList objects and information about successful
+					//		and unsuccessful requests.
 					mog.debug(fetch.data.toString());
 				break;
 		}
