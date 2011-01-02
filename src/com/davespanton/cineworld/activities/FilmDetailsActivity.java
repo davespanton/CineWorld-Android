@@ -193,6 +193,8 @@ public class FilmDetailsActivity extends Activity {
 					getIntent().getStringExtra("filmId") 
 			);
 			
+			cineworldService.requestPerformancesForFilmCinema(getIntent().getStringExtra("cinemaId"), getIntent().getStringExtra("filmId"));
+			
 			showLoaderDialog();
 		}
 		

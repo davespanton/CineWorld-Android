@@ -1,5 +1,8 @@
 package com.davespanton.cineworld.services;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,6 +35,10 @@ public class CineWorldService extends Service {
 	
 	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
 	public static final String CINEWORLD_ERROR = "com.davespanton.cineworld.services.CineWorldErrorEvent";
+		
+	private static final String BASE_URL = "https://www.cineworld.co.uk/api/quickbook/";
+	
+	private static final int DATE_RANGE = 7;
 	
 	private static final Logger mog = LoggerFactory.getLogger(CineWorldService.class);
 	
@@ -89,13 +96,28 @@ public class CineWorldService extends Service {
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.CINEMA_FILM;
 			fdt.data = id;
-			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-			mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+			fdt.execute( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+			mog.debug( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		}
 	}
 	
 	public void requestPerformancesForFilmCinema( String cinemaId, String filmId )	{
 		// TODO make 7 requests :( using WEEK_TIMES id.
+		
+		Calendar target = (Calendar) Calendar.getInstance();
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy");
+		
+		for( int i = 0; i < DATE_RANGE; i++ ) {
+			String date = dateFormat.format(target.getTime());
+			
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.WEEK_TIMES;
+			fdt.data = date + cinemaId + filmId;
+			fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+			
+			target.add(Calendar.DAY_OF_MONTH, 1);
+		}
 	}
 		
 	public void requestPerformancesForFilmCinema( String date, String cinemaId, String filmId ) {
@@ -111,8 +133,8 @@ public class CineWorldService extends Service {
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.DATE_TIMES;
 			fdt.data = data;
-			fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-			mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+			fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+			mog.debug( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 		}
 	}
 	
@@ -298,6 +320,10 @@ public class CineWorldService extends Service {
 				}
 				
 				break;
+			
+			case WEEK_TIMES:
+					mog.debug(fetch.data.toString());
+				break;
 		}
 		
 		if( !error ) {
@@ -317,8 +343,8 @@ public class CineWorldService extends Service {
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.CINEMA_FILM;
-		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-		mog.debug( "https://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		fdt.execute( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		mog.debug( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 	}*/
 	
 	/*private void updateDatesForFilm() {
@@ -333,8 +359,8 @@ public class CineWorldService extends Service {
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.FILM_DATES;
-		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
-		//Log.d( "Cineworld Request", "https://www.cineworld.co.uk/api/quickbook/dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
+		fdt.execute( BASE_URL + "dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
+		//Log.d( "Cineworld Request", BASE_URL + "dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
 	}*/
 	
 	/*private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
@@ -348,8 +374,8 @@ public class CineWorldService extends Service {
 		
 		FetchDataTask fdt = new FetchDataTask();
 		fdt.id = Ids.DATE_TIMES;
-		fdt.execute( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-		mog.debug( "https://www.cineworld.co.uk/api/quickbook/performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+		mog.debug( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 	}*/
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {

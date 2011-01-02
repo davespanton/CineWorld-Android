@@ -29,8 +29,6 @@ public class DateListActivity extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.performances);
-		
-		
 	}
 
 	@Override
