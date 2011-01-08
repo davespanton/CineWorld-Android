@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import net.sf.jtmdb.Movie;
@@ -177,18 +178,14 @@ public class FilmDetailsActivity extends Activity {
 		public void onDateSet(DatePicker view, int year, int monthOfYear,
 				int dayOfMonth) {
 			
-			Log.d("DATE", Integer.toString(year) + " " + Integer.toString(monthOfYear) + " " + Integer.toString(dayOfMonth));
+			Calendar c = Calendar.getInstance();
+			c.set(year, monthOfYear, dayOfMonth);
 			
-			String day;
-			if( dayOfMonth < 10 )
-				day = "0" + Integer.toString(dayOfMonth);
-			else
-				day = Integer.toString(dayOfMonth);
-			
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 			
 			//TODO	check that the extra values exist in the below call.
 			cineworldService.requestPerformancesForFilmCinema( 
-					Integer.toString(year) + Integer.toString(monthOfYear+1) + day, 
+					dateFormat.format(c.getTime()), 
 					getIntent().getStringExtra("cinemaId"), 
 					getIntent().getStringExtra("filmId") 
 			);
@@ -271,6 +268,10 @@ public class FilmDetailsActivity extends Activity {
 						mog.debug( "Performance data received: " + Integer.toString(performances.size()) );
 						startPerformancesActivity( performances );
 					}
+					break;
+				case WEEK_TIMES:
+					
+					mog.debug( "MOOO " + intent.getStringExtra("data") );
 					break;
 			}
 		}

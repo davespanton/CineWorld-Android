@@ -67,6 +67,7 @@ public class PerformanceList extends ArrayList<Performance> implements
 			dest.writeInt( p.isSubtitled() ? 1 : 0 );
 			dest.writeString( p.getTime() );
 			dest.writeString( p.getType() );
+			
 		}
 
 	}

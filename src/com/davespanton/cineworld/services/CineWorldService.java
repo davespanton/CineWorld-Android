@@ -1,11 +1,13 @@
 package com.davespanton.cineworld.services;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.http.conn.MultihomePlainSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException; 
 import org.json.JSONObject;
@@ -19,6 +21,7 @@ import com.davespanton.cineworld.data.Cinema;
 import com.davespanton.cineworld.data.CinemaList;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
+import com.davespanton.cineworld.data.MultiPerformanceList;
 import com.davespanton.cineworld.data.Performance;
 import com.davespanton.cineworld.data.PerformanceList;
 import com.google.code.microlog4android.Logger;
@@ -57,11 +60,13 @@ public class CineWorldService extends Service {
 	
 	// Film date data
 	private JSONArray mFilmDates;
-	//private ArrayList<String> mFilmDatesData = null;
+	
 	private HashMap<String, ArrayList<String>> mFilmDatesData = new HashMap<String, ArrayList<String>>(); 
 			
 	// Performance lists for film-cinema combinations. 
 	private HashMap<String, PerformanceList> mPerformanceData = new HashMap<String, PerformanceList>();
+	
+	private HashMap<String, MultiPerformanceList> mMultiPerformanceData = new HashMap<String, MultiPerformanceList>();
 	
 	// Flags indicating if Cinema and Film data are loaded. 
 	private boolean cinemaDataReady = false;
@@ -102,21 +107,32 @@ public class CineWorldService extends Service {
 	}
 	
 	public void requestPerformancesForFilmCinema( String cinemaId, String filmId )	{
-		// TODO make 7 requests :( using WEEK_TIMES id.
 		
-		Calendar target = (Calendar) Calendar.getInstance();
+		String data = cinemaId + filmId;
 		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy");
-		
-		for( int i = 0; i < DATE_RANGE; i++ ) {
-			String date = dateFormat.format(target.getTime());
+		if( mMultiPerformanceData.containsKey(data) ) {
+			if( mMultiPerformanceData.get(data).isComplete() ) {
+				Intent i = new Intent(CINEWORLD_DATA_LOADED);
+				i.putExtra("id", Ids.WEEK_TIMES);
+				i.putExtra("data", (Serializable) mMultiPerformanceData.get(data));
+			}
+			// else request is outstanding... so wait
+		}
+		else {
+			Calendar target = (Calendar) Calendar.getInstance();
 			
-			FetchDataTask fdt = new FetchDataTask();
-			fdt.id = Ids.WEEK_TIMES;
-			fdt.data = date + cinemaId + filmId;
-			fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-			
-			target.add(Calendar.DAY_OF_MONTH, 1);
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+			mMultiPerformanceData.put(data, new MultiPerformanceList(data, DATE_RANGE));
+			for( int i = 0; i < DATE_RANGE; i++ ) {
+				String date = dateFormat.format(target.getTime());
+				
+				FetchDataTask fdt = new FetchDataTask();
+				fdt.id = Ids.WEEK_TIMES;
+				fdt.data = date + "," + cinemaId + "," + filmId;
+				fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
+				
+				target.add(Calendar.DAY_OF_MONTH, 1);
+			}
 		}
 	}
 		
@@ -322,9 +338,43 @@ public class CineWorldService extends Service {
 				break;
 			
 			case WEEK_TIMES:
-					//TODO 	create a class to handle holding several PerformanceList objects and information about successful
-					//		and unsuccessful requests.
-					mog.debug(fetch.data.toString());
+				
+				filmPerformanceData = new PerformanceList();
+				try {
+					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
+					JSONArray filmPerformance = obj.getJSONArray("performances");
+					
+					for( int i = 0; i < filmPerformance.length(); i++ ) {
+						if( filmPerformance.getJSONObject(i) != null ) {
+							Performance p = getPerformanceFromJSONObject( filmPerformance.getJSONObject(i) );
+							filmPerformanceData.add(p);
+						}
+					}
+				//TODO	iron out error handling here...
+				} catch (JSONException e) {
+					e.printStackTrace();
+					mog.error( "JSONException for DATE_TIMES. " + result.content );
+					//error = true;
+				} catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
+					//error = true;
+				}
+				
+				String[] idData = fetch.data.toString().split(",");
+				String parentId = idData[1] + idData[2];
+				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
+				if( error )
+					multiPerformanceList.putPerformaceList(fetch.data.toString(), null);
+				else
+					multiPerformanceList.putPerformaceList(fetch.data.toString(), filmPerformanceData);
+				
+				mog.debug( mMultiPerformanceData.get(parentId).isComplete() );
+				
+				if( mMultiPerformanceData.get(parentId).isComplete() )
+					intent.putExtra("data", "moo"); // TODO	make MultiPerformanceList parcelable.
+				else if( !error )
+					return;
+				
 				break;
 		}
 		

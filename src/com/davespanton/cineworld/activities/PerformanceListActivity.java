@@ -48,7 +48,7 @@ public class PerformanceListActivity extends ListActivity {
 			TextView label = (TextView) row.findViewById(R.id.list_text);
 			
 			label.setText( mPerformances.get(position).getTime() );
-			
+			 
 			return (row);
 			
 		}
