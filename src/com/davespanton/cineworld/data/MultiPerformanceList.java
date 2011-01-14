@@ -5,6 +5,8 @@ import java.util.HashMap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+//TODO	think about structure for retrieving information: need sorting by date,  
+//		adapters need numeric access.
 public class MultiPerformanceList implements Parcelable {
 	
 	public static final Parcelable.Creator<MultiPerformanceList> CREATOR = new Parcelable.Creator<MultiPerformanceList>() {
@@ -85,6 +87,4 @@ public class MultiPerformanceList implements Parcelable {
 		id = in.readString();
 		size = in.readInt();
 	}
-	
-	
 }

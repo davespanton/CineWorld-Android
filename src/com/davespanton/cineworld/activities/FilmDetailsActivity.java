@@ -10,6 +10,7 @@ import java.util.Calendar;
 import net.sf.jtmdb.Movie;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.data.MultiPerformanceList;
 import com.davespanton.cineworld.data.PerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
@@ -34,7 +35,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -266,12 +266,13 @@ public class FilmDetailsActivity extends Activity {
 						mLoaderDialog.dismiss();
 						PerformanceList performances = (PerformanceList) intent.getSerializableExtra("data");
 						mog.debug( "Performance data received: " + Integer.toString(performances.size()) );
-						startPerformancesActivity( performances );
+						//startPerformancesActivity( performances );
 					}
 					break;
 				case WEEK_TIMES:
 					
-					mog.debug( "MOOO " + intent.getStringExtra("data") );
+					MultiPerformanceList mpl = (MultiPerformanceList) intent.getParcelableExtra("data");
+					mog.debug( "MOOO " + intent.getParcelableExtra("data").toString() );
 					break;
 			}
 		}

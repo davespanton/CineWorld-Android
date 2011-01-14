@@ -3,11 +3,9 @@ package com.davespanton.cineworld.services;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.http.conn.MultihomePlainSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException; 
 import org.json.JSONObject;
@@ -361,17 +359,15 @@ public class CineWorldService extends Service {
 				}
 				
 				String[] idData = fetch.data.toString().split(",");
-				String parentId = idData[1] + idData[2];
+				String parentId = idData[1] + "," + idData[2];
 				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
 				if( error )
 					multiPerformanceList.putPerformaceList(fetch.data.toString(), null);
 				else
 					multiPerformanceList.putPerformaceList(fetch.data.toString(), filmPerformanceData);
 				
-				mog.debug( mMultiPerformanceData.get(parentId).isComplete() );
-				
 				if( mMultiPerformanceData.get(parentId).isComplete() )
-					intent.putExtra("data", "moo"); // TODO	make MultiPerformanceList parcelable.
+					intent.putExtra("data", multiPerformanceList); 
 				else if( !error )
 					return;
 				
