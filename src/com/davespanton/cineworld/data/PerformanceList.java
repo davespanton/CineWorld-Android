@@ -1,6 +1,7 @@
 package com.davespanton.cineworld.data;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -9,9 +10,11 @@ public class PerformanceList extends ArrayList<Performance> implements
 		Parcelable {
 	
 	private static final long serialVersionUID = 8451767216059387721L;
-
-	public PerformanceList() {
-		
+	
+	private String date;
+	
+	public PerformanceList( String date ) {
+		this.date = date;
 	}
 	
 	public PerformanceList( Parcel in ) {
@@ -50,6 +53,8 @@ public class PerformanceList extends ArrayList<Performance> implements
 			
 			this.add(p);
 		}
+		
+		date = in.readString();
 	}
 	
 	@Override
@@ -67,14 +72,19 @@ public class PerformanceList extends ArrayList<Performance> implements
 			dest.writeInt( p.isSubtitled() ? 1 : 0 );
 			dest.writeString( p.getTime() );
 			dest.writeString( p.getType() );
-			
 		}
+		
+		dest.writeString(date);
 
 	}
 	
 	@Override
 	public int describeContents() {
 		return 0;
+	}
+
+	public String getDate() {
+		return date;
 	}
 
 }

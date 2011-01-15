@@ -15,6 +15,7 @@ import moz.http.HttpData;
 import moz.http.HttpRequest;
 
 import com.davespanton.cineworld.ApiKey;
+import com.davespanton.cineworld.data.CineVO;
 import com.davespanton.cineworld.data.Cinema;
 import com.davespanton.cineworld.data.CinemaList;
 import com.davespanton.cineworld.data.Film;
@@ -99,6 +100,7 @@ public class CineWorldService extends Service {
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.CINEMA_FILM;
 			fdt.data = id;
+			fdt.dataVO = new CineVO(id);
 			fdt.execute( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 			mog.debug( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 		}
@@ -127,6 +129,7 @@ public class CineWorldService extends Service {
 				FetchDataTask fdt = new FetchDataTask();
 				fdt.id = Ids.WEEK_TIMES;
 				fdt.data = date + "," + cinemaId + "," + filmId;
+				fdt.dataVO = new CineVO(cinemaId, filmId, date);
 				fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 				
 				target.add(Calendar.DAY_OF_MONTH, 1);
@@ -147,6 +150,7 @@ public class CineWorldService extends Service {
 			FetchDataTask fdt = new FetchDataTask();
 			fdt.id = Ids.DATE_TIMES;
 			fdt.data = data;
+			fdt.dataVO = new CineVO(cinemaId, filmId, date);
 			fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 			mog.debug( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
 		}
@@ -306,7 +310,7 @@ public class CineWorldService extends Service {
 				break;
 				
 			case DATE_TIMES:
-				PerformanceList filmPerformanceData = new PerformanceList();
+				PerformanceList filmPerformanceData = new PerformanceList( fetch.getDataVO().getDate() );
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray filmPerformance = obj.getJSONArray("performances");
@@ -337,7 +341,7 @@ public class CineWorldService extends Service {
 			
 			case WEEK_TIMES:
 				
-				filmPerformanceData = new PerformanceList();
+				filmPerformanceData = new PerformanceList( fetch.getDataVO().getDate() );
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
 					JSONArray filmPerformance = obj.getJSONArray("performances");
@@ -352,23 +356,25 @@ public class CineWorldService extends Service {
 				} catch (JSONException e) {
 					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
-					//error = true;
+					error = true;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					//error = true;
+					error = true;
 				}
 				
 				String[] idData = fetch.data.toString().split(",");
-				String parentId = idData[1] + "," + idData[2];
+				String parentId = idData[1] + idData[2];
 				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
 				if( error )
 					multiPerformanceList.putPerformaceList(fetch.data.toString(), null);
 				else
 					multiPerformanceList.putPerformaceList(fetch.data.toString(), filmPerformanceData);
 				
+				mog.debug( mMultiPerformanceData.get(parentId).isComplete() );
+				
 				if( mMultiPerformanceData.get(parentId).isComplete() )
-					intent.putExtra("data", multiPerformanceList); 
-				else if( !error )
+					intent.putExtra("data", (Parcelable) multiPerformanceList); 
+				else
 					return;
 				
 				break;
@@ -519,6 +525,22 @@ public class CineWorldService extends Service {
 		 */
 		public String data;
 		
+		private CineVO dataVO;
+		
+		public CineVO getDataVO() {
+			return dataVO;
+		}
+		
+		public FetchDataTask(  ) {
+			super();
+			this.dataVO = new CineVO("");
+		}
+		
+		public FetchDataTask( CineVO dataVO ) {
+			super();
+			this.dataVO = dataVO;
+		}
+
 		@Override
 		protected HttpData doInBackground(String... url) {
 
@@ -535,6 +557,7 @@ public class CineWorldService extends Service {
 			
 			processResult( this, result );
 		}
+		
 		
 	}
 }

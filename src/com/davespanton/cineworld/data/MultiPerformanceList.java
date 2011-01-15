@@ -1,5 +1,6 @@
 package com.davespanton.cineworld.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.os.Parcel;
@@ -31,6 +32,8 @@ public class MultiPerformanceList implements Parcelable {
 		super();
 		this.id = id;
 		this.size = size;
+		
+		//PerformanceList[] alp = new PerformanceList[size];
 	}
 	
 	public MultiPerformanceList(Parcel in) {
@@ -44,7 +47,7 @@ public class MultiPerformanceList implements Parcelable {
 	public PerformanceList get(Object key) {
 		return performanceLists.get(key);
 	}
-
+	
 	public int size() {
 		return performanceLists.size();
 	}
