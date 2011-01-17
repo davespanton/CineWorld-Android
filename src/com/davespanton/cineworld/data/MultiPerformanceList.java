@@ -1,8 +1,6 @@
 package com.davespanton.cineworld.data;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -26,14 +24,14 @@ public class MultiPerformanceList implements Parcelable {
 	private String id;
 	private int size;
 	
-	private HashMap<String, PerformanceList> performanceLists = new HashMap<String, PerformanceList>();
+	private ArrayList<PerformanceList> performanceLists;
 	
 	public MultiPerformanceList(String id, int size) {
 		super();
 		this.id = id;
 		this.size = size;
 		
-		//PerformanceList[] alp = new PerformanceList[size];
+		performanceLists = new ArrayList<PerformanceList>();
 	}
 	
 	public MultiPerformanceList(Parcel in) {
@@ -44,10 +42,6 @@ public class MultiPerformanceList implements Parcelable {
 		return id;
 	}
 	
-	public PerformanceList get(Object key) {
-		return performanceLists.get(key);
-	}
-	
 	public int size() {
 		return performanceLists.size();
 	}
@@ -56,12 +50,16 @@ public class MultiPerformanceList implements Parcelable {
 		return performanceLists.size() == size;
 	}
 	
-	public void putPerformaceList( String performanceId, PerformanceList performanceList ) {
+	public void addPerformaceList( PerformanceList performanceList ) {
 		if( size == performanceLists.size() ) {
 			throw new Error("MultiPerformanceList is already full");
 		}
 		
-		performanceLists.put(performanceId, performanceList);
+		performanceLists.add(performanceList);
+	}
+	
+	public PerformanceList get(int index) {
+		return performanceLists.get(index);
 	}
 
 	@Override
@@ -72,9 +70,8 @@ public class MultiPerformanceList implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(performanceLists.size());
-		for( String s: performanceLists.keySet() ) {
-			dest.writeString(s);
-			dest.writeParcelable(performanceLists.get(s), flags);
+		for( int i = 0; i < performanceLists.size(); i++ ) {
+			dest.writeParcelable(performanceLists.get(i), flags);
 		}
 		
 		dest.writeString(id);
@@ -82,10 +79,10 @@ public class MultiPerformanceList implements Parcelable {
 	}
 	
 	public void readFromParcel(Parcel in) {
-		int mapSize = in.readInt();
+		int s = in.readInt();
 		
-		for( int i = 0; i < mapSize; i++ )
-			performanceLists.put(in.readString(), (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
+		for( int i = 0; i < s; i++ )
+			performanceLists.add( (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
 		
 		id = in.readString();
 		size = in.readInt();

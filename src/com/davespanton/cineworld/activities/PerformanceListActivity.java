@@ -52,7 +52,6 @@ public class PerformanceListActivity extends ListActivity {
 			return (row);
 			
 		}
-		
 	}
 	
 }
