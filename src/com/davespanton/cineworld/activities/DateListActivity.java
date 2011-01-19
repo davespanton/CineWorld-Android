@@ -1,6 +1,6 @@
 package com.davespanton.cineworld.activities;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import android.app.ListActivity;
 import android.os.Bundle;
@@ -13,9 +13,14 @@ import android.widget.TextView;
 
 import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.MultiPerformanceList;
+import com.davespanton.cineworld.data.Performance;
 import com.davespanton.cineworld.data.PerformanceList;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
 public class DateListActivity extends ListActivity {
+	
+	public static final Logger mog = LoggerFactory.getLogger(DateListActivity.class);
 	
 	MultiPerformanceList mMultiPerformanceList;
 	
@@ -42,20 +47,22 @@ public class DateListActivity extends ListActivity {
 			TextView label = (TextView) row.findViewById(R.id.performance_date);
 			GridView grid = (GridView) row.findViewById(R.id.performance_grid);
 			
-			//TODO	set title and grid up
+			mog.debug( "setting up list");
 			label.setText( mMultiPerformanceList.get(position).getDate() );
-			//grid.setAdapter( new SomeSortOfPerformanceListAdapter());
+			grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
 			
 			return (row);
 			
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	class PerformanceAdapter extends ArrayAdapter {
-
-		public PerformanceAdapter( ArrayList<PerformanceList> list ) {
-			super(DateListActivity.this, R.id.list_text );
+	class PerformanceAdapter<T extends List<T>> extends ArrayAdapter<T> {
+		
+		PerformanceList performances;
+		
+		public PerformanceAdapter( T list ) {
+			super(DateListActivity.this, R.id.list_text, list);
+			
 		}
 
 		@Override
@@ -64,8 +71,8 @@ public class DateListActivity extends ListActivity {
 			LayoutInflater inflator = getLayoutInflater();
 			View row = inflator.inflate(R.layout.list_layout, parent, false);
 			TextView label = (TextView) row.findViewById(R.id.list_text);
-			
-			//label.setText( mPerformances.get(position).getTime() );
+			mog.debug( "setting up grid");
+			label.setText( ((Performance) getItem(position)).getTime() );
 			 
 			return (row);
 			

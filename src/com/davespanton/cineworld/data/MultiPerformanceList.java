@@ -24,14 +24,12 @@ public class MultiPerformanceList implements Parcelable {
 	private String id;
 	private int size;
 	
-	private ArrayList<PerformanceList> performanceLists;
+	private ArrayList<PerformanceList> performanceLists = new ArrayList<PerformanceList>();;
 	
 	public MultiPerformanceList(String id, int size) {
 		super();
 		this.id = id;
 		this.size = size;
-		
-		performanceLists = new ArrayList<PerformanceList>();
 	}
 	
 	public MultiPerformanceList(Parcel in) {
@@ -81,6 +79,7 @@ public class MultiPerformanceList implements Parcelable {
 	public void readFromParcel(Parcel in) {
 		int s = in.readInt();
 		
+		//TODO	fix bug here. null object reference at 86.
 		for( int i = 0; i < s; i++ )
 			performanceLists.add( (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
 		
