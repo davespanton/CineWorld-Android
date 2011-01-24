@@ -366,9 +366,9 @@ public class CineWorldService extends Service {
 				String parentId = idData[1] + idData[2];
 				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
 				if( error )
-					multiPerformanceList.addPerformaceList(null);
+					multiPerformanceList.add(null);
 				else
-					multiPerformanceList.addPerformaceList(filmPerformanceData);
+					multiPerformanceList.add(filmPerformanceData);
 				
 				mog.debug( mMultiPerformanceData.get(parentId).isComplete() );
 				

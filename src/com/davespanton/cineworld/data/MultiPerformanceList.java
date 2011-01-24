@@ -1,13 +1,15 @@
 package com.davespanton.cineworld.data;
 
 import java.util.ArrayList;
+
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
-//TODO	think about structure for retrieving information: need sorting by date,  
-//		adapters need numeric access.
-public class MultiPerformanceList implements Parcelable {
+public class MultiPerformanceList extends ArrayList<PerformanceList>  implements Parcelable {
 	
+	private static final long serialVersionUID = 5983218982531042262L;
+
 	public static final Parcelable.Creator<MultiPerformanceList> CREATOR = new Parcelable.Creator<MultiPerformanceList>() {
 
 		@Override
@@ -22,14 +24,12 @@ public class MultiPerformanceList implements Parcelable {
 	}; 
 	
 	private String id;
-	private int size;
+	private int maxSize;
 	
-	private ArrayList<PerformanceList> performanceLists = new ArrayList<PerformanceList>();;
-	
-	public MultiPerformanceList(String id, int size) {
+	public MultiPerformanceList(String id, int maxSize) {
 		super();
 		this.id = id;
-		this.size = size;
+		this.maxSize = maxSize;
 	}
 	
 	public MultiPerformanceList(Parcel in) {
@@ -40,25 +40,19 @@ public class MultiPerformanceList implements Parcelable {
 		return id;
 	}
 	
-	public int size() {
-		return performanceLists.size();
-	}
-
 	public boolean isComplete() {
-		return performanceLists.size() == size;
+		return size() == maxSize;
 	}
 	
-	public void addPerformaceList( PerformanceList performanceList ) {
-		if( size == performanceLists.size() ) {
+	@Override
+	public boolean add( PerformanceList performanceList ) {
+		if( size() == maxSize ) {
 			throw new Error("MultiPerformanceList is already full");
 		}
-		
-		performanceLists.add(performanceList);
+		super.add(performanceList);
+		return true;
 	}
 	
-	public PerformanceList get(int index) {
-		return performanceLists.get(index);
-	}
 
 	@Override
 	public int describeContents() {
@@ -67,23 +61,24 @@ public class MultiPerformanceList implements Parcelable {
 
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeInt(performanceLists.size());
-		for( int i = 0; i < performanceLists.size(); i++ ) {
-			dest.writeParcelable(performanceLists.get(i), flags);
+		dest.writeInt(maxSize);
+		dest.writeInt(size());
+		for( int i = 0; i < size(); i++ ) {
+			dest.writeParcelable(get(i), flags);
 		}
 		
 		dest.writeString(id);
-		dest.writeInt(size);
+		
 	}
 	
 	public void readFromParcel(Parcel in) {
+		maxSize = in.readInt();
+		
 		int s = in.readInt();
 		
-		//TODO	fix bug here. null object reference at 86.
 		for( int i = 0; i < s; i++ )
-			performanceLists.add( (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
+			add( (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
 		
 		id = in.readString();
-		size = in.readInt();
 	}
 }

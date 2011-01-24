@@ -1,5 +1,6 @@
 package com.davespanton.cineworld.activities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ListActivity;
@@ -30,13 +31,15 @@ public class DateListActivity extends ListActivity {
 		setContentView(R.layout.performances);
 		
 		mMultiPerformanceList = (MultiPerformanceList) getIntent().getParcelableExtra("data");
+		mog.debug("creating datelist from: " + Integer.toString(mMultiPerformanceList.size()));
+		setListAdapter(new DateListAdapter(mMultiPerformanceList));
 	}
 	
 	@SuppressWarnings("unchecked")
-	class DateListAdapter extends ArrayAdapter {
+	class DateListAdapter extends ArrayAdapter<MultiPerformanceList> {
 
-		public DateListAdapter() {
-			super(DateListActivity.this, R.id.list_text  );
+		public DateListAdapter( MultiPerformanceList list ) {
+			super(DateListActivity.this, R.id.performance_date, R.id.list_text, (List) list );
 		}
 
 		@Override
@@ -47,9 +50,10 @@ public class DateListActivity extends ListActivity {
 			TextView label = (TextView) row.findViewById(R.id.performance_date);
 			GridView grid = (GridView) row.findViewById(R.id.performance_grid);
 			
-			mog.debug( "setting up list");
-			label.setText( mMultiPerformanceList.get(position).getDate() );
-			grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
+			if(mMultiPerformanceList.get(position) != null) {
+				label.setText( mMultiPerformanceList.get(position).getDate() );
+				grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
+			}
 			
 			return (row);
 			

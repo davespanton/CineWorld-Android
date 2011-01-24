@@ -272,7 +272,9 @@ public class FilmDetailsActivity extends Activity {
 				case WEEK_TIMES:
 					
 					MultiPerformanceList mpl = (MultiPerformanceList) intent.getParcelableExtra("data");
-					mog.debug( "MOOO " + intent.getParcelableExtra("data").toString() );
+					Intent i = new Intent(getBaseContext(), DateListActivity.class);
+					i.putExtra("data", (Parcelable) mpl);
+					startActivity(i);
 					break;
 			}
 		}

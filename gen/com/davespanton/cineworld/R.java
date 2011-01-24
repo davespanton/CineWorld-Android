@@ -48,6 +48,7 @@ public final class R {
         public static final int app_name=0x7f040000;
         public static final int current_cinema=0x7f040003;
         public static final int current_film=0x7f040004;
+        public static final int date_list=0x7f040013;
         public static final int dates_times=0x7f04000e;
         public static final int film_details=0x7f040010;
         public static final int loading_data=0x7f04000c;

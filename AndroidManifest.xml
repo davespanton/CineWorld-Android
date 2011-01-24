@@ -17,6 +17,7 @@
 <activity android:name=".activities.PerformanceListActivity" android:label="@string/performance_times"></activity><service android:name=".services.CineWorldService"></service>
 <service android:name=".services.TmdbService"></service>
 
+<activity android:name=".activities.DateListActivity" android:label="@string/date_list"></activity>
 </application>
     <uses-sdk android:minSdkVersion="3" /><uses-permission android:name="android.permission.INTERNET"></uses-permission>
 </manifest> 
