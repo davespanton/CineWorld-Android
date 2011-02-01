@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 public class MultiPerformanceList extends ArrayList<PerformanceList>  implements Parcelable {
 	
@@ -25,6 +24,7 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	
 	private String id;
 	private int maxSize;
+	private int total = 0;
 	
 	public MultiPerformanceList(String id, int maxSize) {
 		super();
@@ -41,15 +41,24 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	}
 	
 	public boolean isComplete() {
-		return size() == maxSize;
+		return total == maxSize;
+	}
+	
+	public int getTotal() {
+		return total;
 	}
 	
 	@Override
 	public boolean add( PerformanceList performanceList ) {
-		if( size() == maxSize ) {
+		if( total == maxSize ) {
 			throw new Error("MultiPerformanceList is already full");
 		}
-		super.add(performanceList);
+		
+		if(performanceList != null)
+			super.add(performanceList);
+		
+		total++;
+		
 		return true;
 	}
 	
@@ -62,6 +71,7 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(maxSize);
+		dest.writeInt(total);
 		dest.writeInt(size());
 		for( int i = 0; i < size(); i++ ) {
 			dest.writeParcelable(get(i), flags);
@@ -73,7 +83,7 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	
 	public void readFromParcel(Parcel in) {
 		maxSize = in.readInt();
-		
+		total = in.readInt();
 		int s = in.readInt();
 		
 		for( int i = 0; i < s; i++ )

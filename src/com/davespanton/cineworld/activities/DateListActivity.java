@@ -56,7 +56,6 @@ public class DateListActivity extends ListActivity {
 			}
 			
 			return (row);
-			
 		}
 	}
 	
