@@ -81,7 +81,12 @@ public class PerformanceList extends ArrayList<Performance> implements
 	public int describeContents() {
 		return 0;
 	}
-
+	
+	/**
+	 * The date that this performance list represents performances from.
+	 * 
+	 * @return	String	A String representing the date in yyyymmdd format.
+	 */
 	public String getDate() {
 		return date;
 	}

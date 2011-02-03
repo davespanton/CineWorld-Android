@@ -1,6 +1,12 @@
 package com.davespanton.cineworld.data;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -71,7 +77,6 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(maxSize);
-		dest.writeInt(total);
 		dest.writeInt(size());
 		for( int i = 0; i < size(); i++ ) {
 			dest.writeParcelable(get(i), flags);
@@ -83,12 +88,35 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 	
 	public void readFromParcel(Parcel in) {
 		maxSize = in.readInt();
-		total = in.readInt();
+		
 		int s = in.readInt();
 		
 		for( int i = 0; i < s; i++ )
 			add( (PerformanceList) in.readParcelable(PerformanceList.class.getClassLoader()));
 		
+		total = size();
 		id = in.readString();
+		
+		
+		//Collections.sort(this, new StringDateComparitor());
+	}
+	
+	class StringDateComparitor implements Comparator<String> {
+
+		@Override
+		public int compare(String object1, String object2) {
+			SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+			Date firstDate;
+			Date secondDate;
+			try {
+				firstDate = df.parse(object1);
+				secondDate = df.parse(object2);
+			} catch (ParseException e) {
+				return 0;
+			}
+			
+			return firstDate.compareTo(secondDate);
+		}
+		
 	}
 }
