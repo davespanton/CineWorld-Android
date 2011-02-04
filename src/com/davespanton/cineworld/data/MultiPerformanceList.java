@@ -64,7 +64,7 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 			super.add(performanceList);
 		
 		total++;
-		
+		Collections.sort(this, new PerformanceListDateComparitor());
 		return true;
 	}
 	
@@ -98,19 +98,19 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 		id = in.readString();
 		
 		
-		//Collections.sort(this, new StringDateComparitor());
+		Collections.sort(this, new PerformanceListDateComparitor());
 	}
 	
-	class StringDateComparitor implements Comparator<String> {
+	class PerformanceListDateComparitor implements Comparator<PerformanceList> {
 
 		@Override
-		public int compare(String object1, String object2) {
+		public int compare(PerformanceList a, PerformanceList b) {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 			Date firstDate;
 			Date secondDate;
 			try {
-				firstDate = df.parse(object1);
-				secondDate = df.parse(object2);
+				firstDate = df.parse(a.getDate());
+				secondDate = df.parse(b.getDate());
 			} catch (ParseException e) {
 				return 0;
 			}
