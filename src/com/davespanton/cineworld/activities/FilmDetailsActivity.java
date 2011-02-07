@@ -4,24 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import net.sf.jtmdb.Movie;
-
-import com.davespanton.cineworld.R;
-import com.davespanton.cineworld.data.MultiPerformanceList;
-import com.davespanton.cineworld.data.PerformanceList;
-import com.davespanton.cineworld.services.CineWorldService;
-import com.davespanton.cineworld.services.TmdbService;
-import com.davespanton.cineworld.services.CineWorldService.Ids;
-import com.google.code.microlog4android.Logger;
-import com.google.code.microlog4android.LoggerFactory;
-
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -38,24 +24,25 @@ import android.os.Parcelable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class FilmDetailsActivity extends Activity {
+import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.data.MultiPerformanceList;
+import com.davespanton.cineworld.services.CineWorldService;
+import com.davespanton.cineworld.services.TmdbService;
+import com.davespanton.cineworld.services.CineWorldService.Ids;
+import com.google.code.microlog4android.Logger;
+import com.google.code.microlog4android.LoggerFactory;
 
-	private static final int DATE_DIALOG_ID = 0;
+public class FilmDetailsActivity extends Activity {
 	
 	private Logger mog = LoggerFactory.getLogger( FilmDetailsActivity.class );
 	
 	private TmdbService tmdbService;
 	private CineWorldService cineworldService;
 	
-	private Movie movie;
-	
-	private int mYear;
-    private int mMonth;
-    private int mDay;
+	//private Movie movie;
     
     private ProgressDialog mLoaderDialog;
 	
@@ -104,16 +91,10 @@ public class FilmDetailsActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				showDialog(DATE_DIALOG_ID);
+				requestDateTimes();
 			}
 			
 		});
-		
-		// get the current date
-        final Calendar c = Calendar.getInstance();
-        mYear = c.get(Calendar.YEAR);
-        mMonth = c.get(Calendar.MONTH);
-        mDay = c.get(Calendar.DAY_OF_MONTH);
 		
 		bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
 		bindService( new Intent(this, CineWorldService.class), cineworldServiceConn, BIND_AUTO_CREATE);
@@ -156,46 +137,19 @@ public class FilmDetailsActivity extends Activity {
 		target.setImageDrawable(image);
 	}
 	
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		
-		switch( id ) {
-			
-			case DATE_DIALOG_ID:
-				return new DatePickerDialog(this, mDateSetListener, mYear, mMonth, mDay);
-		}
-		
-		return null;
-	}
-	
 	protected void showLoaderDialog() {
 		mLoaderDialog = ProgressDialog.show( this, "", getString(R.string.loading_data) );
 	}
 	
-	private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
-
-		@Override
-		public void onDateSet(DatePicker view, int year, int monthOfYear,
-				int dayOfMonth) {
+	public void requestDateTimes() {
+				
+		cineworldService.requestPerformancesForFilmCinema(
+				getIntent().getStringExtra("cinemaId"), 
+				getIntent().getStringExtra("filmId")
+		);
 			
-			Calendar c = Calendar.getInstance();
-			c.set(year, monthOfYear, dayOfMonth);
-			
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-			
-			//TODO	check that the extra values exist in the below call.
-			cineworldService.requestPerformancesForFilmCinema( 
-					dateFormat.format(c.getTime()), 
-					getIntent().getStringExtra("cinemaId"), 
-					getIntent().getStringExtra("filmId") 
-			);
-			
-			cineworldService.requestPerformancesForFilmCinema(getIntent().getStringExtra("cinemaId"), getIntent().getStringExtra("filmId"));
-			
-			showLoaderDialog();
-		}
-		
-	};
+		showLoaderDialog();
+	}
 	
 	private ServiceConnection serviceConn = new ServiceConnection() {
 		
@@ -228,12 +182,6 @@ public class FilmDetailsActivity extends Activity {
 		
 	};
 	
-	private void startPerformancesActivity(PerformanceList performances) {
-		Intent i = new Intent(this, PerformanceListActivity.class);
-		i.putExtra( "data", (Parcelable) performances );
-		startActivity(i);
-	}
-	
 	private BroadcastReceiver tmdbReceiver = new BroadcastReceiver() {
 		
 		@Override
@@ -241,7 +189,7 @@ public class FilmDetailsActivity extends Activity {
 			
 			//boolean success = intent.getBooleanExtra("success", false);
 			
-			movie = tmdbService.getMovie( getIntent().getStringExtra("title") );
+			//movie = tmdbService.getMovie( getIntent().getStringExtra("title") );
 			
 			/*if( success && movie != null)
 				body.setText( movie.getOverview() );
@@ -261,19 +209,16 @@ public class FilmDetailsActivity extends Activity {
 					//	currently unused
 					
 					break;
-				case DATE_TIMES:
-					if( mLoaderDialog != null && mLoaderDialog.isShowing() ) {
-						mLoaderDialog.dismiss();
-						PerformanceList performances = (PerformanceList) intent.getSerializableExtra("data");
-						mog.debug( "Performance data received: " + Integer.toString(performances.size()) );
-						//startPerformancesActivity( performances );
-					}
-					break;
+		
 				case WEEK_TIMES:
 					
 					MultiPerformanceList mpl = (MultiPerformanceList) intent.getParcelableExtra("data");
 					Intent i = new Intent(getBaseContext(), DateListActivity.class);
 					i.putExtra("data", (Parcelable) mpl);
+					
+					if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+						mLoaderDialog.dismiss();
+						
 					startActivity(i);
 					break;
 			}

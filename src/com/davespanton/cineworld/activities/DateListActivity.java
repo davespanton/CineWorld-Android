@@ -1,6 +1,8 @@
 package com.davespanton.cineworld.activities;
 
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import android.app.ListActivity;
@@ -38,6 +40,9 @@ public class DateListActivity extends ListActivity {
 	@SuppressWarnings("unchecked")
 	class DateListAdapter extends ArrayAdapter<MultiPerformanceList> {
 
+		SimpleDateFormat dateFormat = new SimpleDateFormat();
+		Date dateHolder;
+		
 		public DateListAdapter( MultiPerformanceList list ) {
 			super(DateListActivity.this, R.id.performance_date, R.id.list_text, (List) list );
 		}
@@ -47,23 +52,30 @@ public class DateListActivity extends ListActivity {
 			
 			LayoutInflater inflator = getLayoutInflater();
 			View row = inflator.inflate(R.layout.performace_times, parent, false);
+			
 			TextView label = (TextView) row.findViewById(R.id.performance_date);
 			GridView grid = (GridView) row.findViewById(R.id.performance_grid);
 			
-			if(mMultiPerformanceList.get(position) != null) {
-				label.setText( mMultiPerformanceList.get(position).getDate() );
-				grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
+			dateFormat.applyPattern("yyyyMMdd");
+			try {
+				dateHolder = dateFormat.parse(mMultiPerformanceList.get(position).getDate());
+			} catch (ParseException e) {
+				e.printStackTrace();
 			}
+			dateFormat.applyPattern("EEEE dd MMMM");
+			
+			label.setText( dateFormat.format(dateHolder) );
+			grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
 			
 			return (row);
 		}
 	}
 	
-	class PerformanceAdapter<T extends List<T>> extends ArrayAdapter<T> {
+	class PerformanceAdapter<E extends List<?>> extends ArrayAdapter<E> {
 		
 		PerformanceList performances;
 		
-		public PerformanceAdapter( T list ) {
+		public PerformanceAdapter( List<E> list ) {
 			super(DateListActivity.this, R.id.list_text, list);
 			
 		}
@@ -74,7 +86,7 @@ public class DateListActivity extends ListActivity {
 			LayoutInflater inflator = getLayoutInflater();
 			View row = inflator.inflate(R.layout.list_layout, parent, false);
 			TextView label = (TextView) row.findViewById(R.id.list_text);
-			mog.debug( "setting up grid");
+			
 			label.setText( ((Performance) getItem(position)).getTime() );
 			 
 			return (row);

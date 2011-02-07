@@ -365,7 +365,7 @@ public class CineWorldService extends Service {
 				String[] idData = fetch.data.toString().split(",");
 				String parentId = idData[1] + idData[2];
 				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
-				if( error )
+				if( error || filmPerformanceData.size() == 0 )
 					multiPerformanceList.add(null);
 				else
 					multiPerformanceList.add(filmPerformanceData);
