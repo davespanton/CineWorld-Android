@@ -56,7 +56,11 @@ public class DateListActivity extends ListActivity {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position,
 				long id) {
-			String url = mMultiPerformanceList.get(position).get(((AdapterView<?>)parent.getParent().getParent()).getPositionForView(parent)).getBookingUrl();
+			
+			int upperPosition = ((AdapterView<?>)parent.getParent().getParent()).getPositionForView(parent);
+			
+			PerformanceList p = mMultiPerformanceList.get(upperPosition);
+			String url = p.get(position).getBookingUrl();
 			
 			Intent browserIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
 			startActivity(browserIntent);
