@@ -5,19 +5,27 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import android.R.anim;
 import android.app.ListActivity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 
 import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.MultiPerformanceList;
 import com.davespanton.cineworld.data.Performance;
 import com.davespanton.cineworld.data.PerformanceList;
+import com.davespanton.util.DateUtils;
 import com.google.code.microlog4android.Logger;
 import com.google.code.microlog4android.LoggerFactory;
 
@@ -36,6 +44,24 @@ public class DateListActivity extends ListActivity {
 		mog.debug("creating datelist from: " + Integer.toString(mMultiPerformanceList.size()));
 		setListAdapter(new DateListAdapter(mMultiPerformanceList));
 	}
+		
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		mog.debug( "Parent item position: " + Integer.toString(position));
+		super.onListItemClick(l, v, position, id);
+	}
+	
+	private AdapterView.OnItemClickListener gridItemClickListener = new AdapterView.OnItemClickListener()	{
+
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,
+				long id) {
+			String url = mMultiPerformanceList.get(position).get(((AdapterView<?>)parent.getParent().getParent()).getPositionForView(parent)).getBookingUrl();
+			
+			Intent browserIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
+			startActivity(browserIntent);
+		}
+	};
 	
 	@SuppressWarnings("unchecked")
 	class DateListAdapter extends ArrayAdapter<MultiPerformanceList> {
@@ -63,10 +89,12 @@ public class DateListActivity extends ListActivity {
 				e.printStackTrace();
 			}
 			dateFormat.applyPattern("EEEE dd MMMM");
-			
-			label.setText( dateFormat.format(dateHolder) );
+			String d = dateFormat.format(dateHolder);
+			int dI = d.indexOf("day");
+			d = d.substring(0, dI+6) + DateUtils.getOrdinal(dateHolder.getDate()) + d.substring(dI+6);
+			label.setText( d );
 			grid.setAdapter( new PerformanceAdapter(mMultiPerformanceList.get(position)));
-			
+			grid.setOnItemClickListener(gridItemClickListener);
 			return (row);
 		}
 	}
@@ -88,7 +116,7 @@ public class DateListActivity extends ListActivity {
 			TextView label = (TextView) row.findViewById(R.id.list_text);
 			
 			label.setText( ((Performance) getItem(position)).getTime() );
-			 
+			
 			return (row);
 			
 		}

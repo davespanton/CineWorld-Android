@@ -44,7 +44,7 @@ public class MultiPerformanceList extends ArrayList<PerformanceList>  implements
 		return id;
 	}
 	
-	public boolean isComplete() {
+	public boolean isComplete() { 
 		return total == maxSize;
 	}
 	

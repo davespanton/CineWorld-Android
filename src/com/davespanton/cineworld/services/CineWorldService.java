@@ -115,6 +115,7 @@ public class CineWorldService extends Service {
 				Intent i = new Intent(CINEWORLD_DATA_LOADED);
 				i.putExtra("id", Ids.WEEK_TIMES);
 				i.putExtra("data", (Serializable) mMultiPerformanceData.get(data));
+				sendBroadcast(i);
 			}
 			// else request is outstanding... so wait
 		}
@@ -369,8 +370,6 @@ public class CineWorldService extends Service {
 					multiPerformanceList.add(null);
 				else
 					multiPerformanceList.add(filmPerformanceData);
-				
-				mog.debug( mMultiPerformanceData.get(parentId).isComplete() );
 				
 				if( mMultiPerformanceData.get(parentId).isComplete() )
 					intent.putExtra("data", (Parcelable) multiPerformanceList); 
