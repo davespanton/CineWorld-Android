@@ -3,7 +3,7 @@
 	android:orientation="vertical"
 	android:layout_width="fill_parent"
  	android:layout_height="fill_parent"
-  	android:paddingTop="10px"
+  	android:padding="15px"
 >
 		
 		<TextView 
@@ -52,7 +52,7 @@
 			android:id="@+id/date_times"
 			android:text="@string/dates_times"
 			android:layout_width="fill_parent"
-			android:layout_height="50px"
+			android:layout_height="65px"
 			android:layout_gravity="center_horizontal"
 			android:paddingLeft="20px"
 			android:paddingRight="20px"
@@ -70,11 +70,6 @@
 			android:paddingRight="20px"
 			style="@style/Button"
 		/> -->
-		
-		<View 
-			android:layout_width="fill_parent"
-			android:layout_height="10px"
-			/>
 	
 </LinearLayout>
 

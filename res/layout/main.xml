@@ -3,6 +3,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:padding="15px"
     >
     
 <ImageView
@@ -21,28 +22,25 @@
 <Button
 	android:id="@+id/cinema_button"
 	android:text="@string/view_cinemas"
+	android:textSize="14dip"
 	android:layout_width="fill_parent"
-	android:layout_height="50px"
+	android:layout_height="65px"
 	android:layout_gravity="center_horizontal"
-	android:paddingLeft="20px"
-	android:paddingRight="20px"
 	style="@style/Button"
 	/>
 
 <View 
 	android:layout_width="fill_parent"
-	android:layout_height="10px"
+	android:layout_height="15px"
 	/>
 
 <Button
 	android:id="@+id/film_button"
 	android:text="@string/view_films"
+	android:textSize="14dip"
 	android:layout_width="fill_parent"
-	android:layout_height="50px"
+	android:layout_height="65px"
 	android:layout_gravity="center_horizontal"
-	android:paddingLeft="20px"
-	android:paddingRight="20px"
-	android:paddingBottom="5px"
 	style="@style/Button"
 	/>
 
