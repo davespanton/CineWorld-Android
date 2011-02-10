@@ -24,15 +24,14 @@ public final class R {
         public static final int thick_stroke_button_red_9p=0x7f02000a;
     }
     public static final class id {
-        public static final int cinema_button=0x7f060005;
+        public static final int cinema_button=0x7f060004;
         public static final int date_times=0x7f060003;
-        public static final int film_button=0x7f060006;
+        public static final int film_button=0x7f060005;
         public static final int film_rating=0x7f060001;
         public static final int film_title=0x7f060000;
         public static final int list_text=0x01010000;
-        public static final int more_info=0x7f060004;
-        public static final int performance_date=0x7f060007;
-        public static final int performance_grid=0x7f060008;
+        public static final int performance_date=0x7f060006;
+        public static final int performance_grid=0x7f060007;
         public static final int still_image=0x7f060002;
     }
     public static final class layout {
