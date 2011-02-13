@@ -188,8 +188,7 @@ public class CinemaListActivity extends ListActivity {
 				loaderDialog.dismiss();
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
-			//TODO	move strings
-			builder.setMessage("An error occured!").setPositiveButton("Okay", new OnClickListener() {
+			builder.setMessage(getString(R.string.something_wrong)).setPositiveButton(getString(R.string.okay), new OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					

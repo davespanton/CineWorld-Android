@@ -46,7 +46,7 @@ public class CineWorldService extends Service {
 	
 	private final Binder binder = new LocalBinder();
 	
-	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_DATES, DATE_TIMES, WEEK_TIMES };
+	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_CINEMA, FILM_DATES, DATE_TIMES, WEEK_TIMES };
 	
 	// Cinema data
 	private CinemaList mPCinemaData;
@@ -54,17 +54,19 @@ public class CineWorldService extends Service {
 	// Films data
 	private FilmList mPFilmData;
 	
-	// Films for selected cinema data.
+	// Map of films showing at a selected cinema.
 	private HashMap<String, FilmList> mCinemaFilmData = new HashMap<String, FilmList>();
 	
-	// Film date data
-	private JSONArray mFilmDates;
+	// Map of cinemas showing a given film.
+	private HashMap<String, CinemaList> mFilmCinemaData = new HashMap<String, CinemaList>();
 	
+	// Map of dates available for a film-cinema combination.
 	private HashMap<String, ArrayList<String>> mFilmDatesData = new HashMap<String, ArrayList<String>>(); 
 			
-	// Performance lists for film-cinema combinations. 
+	// Map of Performance lists for film-cinema-date combinations. 
 	private HashMap<String, PerformanceList> mPerformanceData = new HashMap<String, PerformanceList>();
 	
+	// Map of MultiPerformanceLists for film-cinema combinations.
 	private HashMap<String, MultiPerformanceList> mMultiPerformanceData = new HashMap<String, MultiPerformanceList>();
 	
 	// Flags indicating if Cinema and Film data are loaded. 
@@ -103,6 +105,22 @@ public class CineWorldService extends Service {
 			fdt.dataVO = new CineVO(id);
 			fdt.execute( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
 			mog.debug( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
+		}
+	}
+	
+	public void requestCinemaListForFilm( String id ) {
+		if( mCinemaFilmData.containsKey(id) ) {
+			Intent i = new Intent(CINEWORLD_DATA_LOADED);
+			i.putExtra("id", Ids.FILM_CINEMA);
+			i.putExtra("data", (Parcelable) mFilmCinemaData.get(id));
+			sendBroadcast(i);
+		}
+		else {
+			FetchDataTask fdt = new FetchDataTask();
+			fdt.id = Ids.FILM_CINEMA;
+			fdt.data = id;
+			fdt.execute( BASE_URL + "cinemas?key=" + ApiKey.KEY + "&full=true&film=" + id);
+			mog.debug( BASE_URL + "cinemas?key=" + ApiKey.KEY + "&full=true&film=" + id);
 		}
 	}
 	
@@ -288,14 +306,42 @@ public class CineWorldService extends Service {
 				
 				break;
 				
+			case FILM_CINEMA:
+				
+				CinemaList filmCinemaData = new CinemaList();
+				try {
+					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
+					JSONArray filmCinemas = obj.getJSONArray("cinemas");
+					for( int i = 0; i < filmCinemas.length(); i++ ) {
+						if( filmCinemas.get(i) != null ) {
+							Cinema c = getCinemaFromJSONObject(filmCinemas.getJSONObject(i));
+							filmCinemaData.add(c);
+						}
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+					mog.error( "JSONException for FILM_CINEMA. " + result.content );
+					error = true;
+				} catch (NullPointerException e) {
+					mog.error( "NullPointer in CineworldService." + result.content);
+					error = true;
+				}
+				
+				if( !error ) {
+					intent.putExtra("data", (Parcelable) filmCinemaData);
+					mFilmCinemaData.put(fetch.data.toString(), filmCinemaData);
+				}
+				
+				break;
+				
 			case FILM_DATES:
 				ArrayList<String> filmDates = new ArrayList<String>();
 				try {
 					JSONObject obj = (JSONObject) new JSONTokener(result.content).nextValue();
-					mFilmDates = obj.getJSONArray("dates");
+					JSONArray jsonFilmDates = obj.getJSONArray("dates");
 					
-					for( int i = 0; i < mFilmDates.length(); i++ ) {
-						filmDates.add( mFilmDates.getString(i) );
+					for( int i = 0; i < jsonFilmDates.length(); i++ ) {
+						filmDates.add( jsonFilmDates.getString(i) );
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();

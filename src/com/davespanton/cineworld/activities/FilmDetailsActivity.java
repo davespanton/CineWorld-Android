@@ -28,6 +28,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.davespanton.cineworld.R;
+import com.davespanton.cineworld.adapters.CinemaAdapter;
+import com.davespanton.cineworld.data.Cinema;
+import com.davespanton.cineworld.data.CinemaList;
 import com.davespanton.cineworld.data.MultiPerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
@@ -45,7 +48,7 @@ public class FilmDetailsActivity extends Activity {
 	//private Movie movie;
     
     private ProgressDialog mLoaderDialog;
-	
+    
 	//private TextView body;
 	
 	protected void onConnected() {
@@ -62,6 +65,10 @@ public class FilmDetailsActivity extends Activity {
 		
 		super.onCreate(savedInstanceState);
 		setContentView( R.layout.film_details );
+		
+		// Bind services.
+		bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
+		bindService( new Intent(this, CineWorldService.class), cineworldServiceConn, BIND_AUTO_CREATE);
 		
 		String stillUrl = getIntent().getStringExtra("poster_url"); 
 				
@@ -80,24 +87,20 @@ public class FilmDetailsActivity extends Activity {
 		
 		TextView rating = (TextView) findViewById( R.id.film_rating );
 		rating.setText( getString(R.string.rating) + ": " + getIntent().getStringExtra("rating") );
-				
-		//body = (TextView) findViewById( R.id.film_body );
 		
+		// Setup dates/times button.
 		Button showDates = (Button) findViewById( R.id.date_times );
-		
-		showDates.setEnabled( getIntent().getStringExtra("cinemaId") != null );
-		
+		//showDates.setEnabled( hasCinemaId() );
 		showDates.setOnClickListener( new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				requestDateTimes();
+				if( hasCinemaId() ) 
+					requestDateTimes();
+				else
+					cineworldService.requestCinemaListForFilm(getIntent().getStringExtra("filmId"));
 			}
-			
 		});
-		
-		bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
-		bindService( new Intent(this, CineWorldService.class), cineworldServiceConn, BIND_AUTO_CREATE);
 	}
 	
 	@Override
@@ -133,7 +136,11 @@ public class FilmDetailsActivity extends Activity {
 		//TODO	resume progress dialog?
 	}
 	
-	private void updateImageView( ImageView target, Drawable image ) {
+	protected boolean hasCinemaId() {
+		return getIntent().getStringExtra("cinemaId") != null;
+	}
+	
+	protected void updateImageView( ImageView target, Drawable image ) {
 		target.setImageDrawable(image);
 	}
 	
@@ -141,7 +148,11 @@ public class FilmDetailsActivity extends Activity {
 		mLoaderDialog = ProgressDialog.show( this, "", getString(R.string.loading_data) );
 	}
 	
-	public void requestDateTimes() {
+	protected void showCinemasDialog() {
+		
+	}
+	
+	protected void requestDateTimes() {
 				
 		cineworldService.requestPerformancesForFilmCinema(
 				getIntent().getStringExtra("cinemaId"), 
@@ -221,6 +232,24 @@ public class FilmDetailsActivity extends Activity {
 						
 					startActivity(i);
 					break;
+					
+				case FILM_CINEMA:
+					
+					CinemaList cinemaList = (CinemaList) intent.getSerializableExtra("data");
+					AlertDialog.Builder builder = new AlertDialog.Builder(getBaseContext());
+					builder.setTitle("Choose a cinema"); //TODO	- move this string
+					builder.setAdapter(new CinemaAdapter<Cinema>(getBaseContext(), R.layout.list_layout, R.id.list_text, cinemaList ), new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							
+							
+						}
+						
+					});
+					AlertDialog alert = builder.create();
+					
+				break;
 			}
 		}
 	};
