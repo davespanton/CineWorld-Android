@@ -235,11 +235,12 @@ public class FilmDetailsActivity extends Activity {
 					
 				case FILM_CINEMA:
 					
+					mog.debug("received film cinema data");
 					CinemaList cinemaList = (CinemaList) intent.getSerializableExtra("data");
-					AlertDialog.Builder builder = new AlertDialog.Builder(getBaseContext());
+					AlertDialog.Builder builder = new AlertDialog.Builder(context);
 					builder.setTitle("Choose a cinema"); //TODO	- move this string
-					builder.setAdapter(new CinemaAdapter<Cinema>(getBaseContext(), R.layout.list_layout, R.id.list_text, cinemaList ), new DialogInterface.OnClickListener() {
-
+					builder.setAdapter(new CinemaAdapter<Cinema>(getBaseContext(), R.layout.popup_list_layout, R.id.popup_list_text, cinemaList ), new DialogInterface.OnClickListener() {
+							
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							
@@ -248,7 +249,7 @@ public class FilmDetailsActivity extends Activity {
 						
 					});
 					AlertDialog alert = builder.create();
-					
+					alert.show();
 				break;
 			}
 		}
@@ -270,7 +271,7 @@ public class FilmDetailsActivity extends Activity {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					finish();
-				}
+				} 
 			});
 			
 			AlertDialog alert = builder.create();
