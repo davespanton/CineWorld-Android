@@ -75,11 +75,13 @@ public class HttpRequest {
                 StringBuffer buff = new StringBuffer();
                 try {
                         URL url = new URL(sUrl);
+                        //TODO bug when connection doesn't open...
                         URLConnection con = url.openConnection();
                         con.setConnectTimeout(timeout);
                         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                         while ((str = in.readLine()) != null) {
                                 buff.append(str);
+                                Log.i("Buffer says: ", str);
                         }
                         ret.content = buff.toString();
                         //get headers

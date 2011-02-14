@@ -96,9 +96,12 @@ public class FilmDetailsActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				if( hasCinemaId() ) 
-					requestDateTimes();
+					requestDateTimes(
+							getIntent().getStringExtra("cinemaId"), 
+							getIntent().getStringExtra("filmId")
+							);
 				else
-					cineworldService.requestCinemaListForFilm(getIntent().getStringExtra("filmId"));
+					requestFilmCinemas(getIntent().getStringExtra("filmId"));
 			}
 		});
 	}
@@ -148,17 +151,18 @@ public class FilmDetailsActivity extends Activity {
 		mLoaderDialog = ProgressDialog.show( this, "", getString(R.string.loading_data) );
 	}
 	
-	protected void showCinemasDialog() {
+	//protected void showCinemasDialog() {
 		
+	//}
+	
+	protected void requestDateTimes(String cinemaId, String filmId) {
+				
+		cineworldService.requestPerformancesForFilmCinema(cinemaId, filmId);
+		showLoaderDialog();
 	}
 	
-	protected void requestDateTimes() {
-				
-		cineworldService.requestPerformancesForFilmCinema(
-				getIntent().getStringExtra("cinemaId"), 
-				getIntent().getStringExtra("filmId")
-		);
-			
+	protected void requestFilmCinemas(String filmId) {
+		cineworldService.requestCinemaListForFilm(filmId);
 		showLoaderDialog();
 	}
 	
@@ -215,11 +219,11 @@ public class FilmDetailsActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			
 			switch( (Ids) intent.getSerializableExtra("id") ) {
-				case FILM_DATES:
+				//case FILM_DATES:
 					
 					//	currently unused
 					
-					break;
+					//break;
 		
 				case WEEK_TIMES:
 					
@@ -235,16 +239,18 @@ public class FilmDetailsActivity extends Activity {
 					
 				case FILM_CINEMA:
 					
+					if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+						mLoaderDialog.dismiss();
+					
 					mog.debug("received film cinema data");
-					CinemaList cinemaList = (CinemaList) intent.getSerializableExtra("data");
+					final CinemaList cinemaList = (CinemaList) intent.getSerializableExtra("data");
 					AlertDialog.Builder builder = new AlertDialog.Builder(context);
 					builder.setTitle("Choose a cinema"); //TODO	- move this string
 					builder.setAdapter(new CinemaAdapter<Cinema>(getBaseContext(), R.layout.popup_list_layout, R.id.popup_list_text, cinemaList ), new DialogInterface.OnClickListener() {
 							
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							
-							
+							requestDateTimes(cinemaList.get(which).getId(), getIntent().getStringExtra("filmId"));
 						}
 						
 					});
