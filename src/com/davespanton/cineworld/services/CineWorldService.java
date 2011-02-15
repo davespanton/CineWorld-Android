@@ -38,7 +38,7 @@ public class CineWorldService extends Service {
 	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
 	public static final String CINEWORLD_ERROR = "com.davespanton.cineworld.services.CineWorldErrorEvent";
 		
-	private static final String BASE_URL = "https://www.cineworld.co.uk/api/quickbook/";
+	private static final String BASE_URL = "http://www.cineworld.co.uk/api/quickbook/";
 	
 	private static final int DATE_RANGE = 7;
 	

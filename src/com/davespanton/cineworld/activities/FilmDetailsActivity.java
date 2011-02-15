@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import net.sf.jtmdb.Movie;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -42,7 +41,7 @@ public class FilmDetailsActivity extends Activity {
 	
 	private Logger mog = LoggerFactory.getLogger( FilmDetailsActivity.class );
 	
-	private TmdbService tmdbService;
+	//private TmdbService tmdbService;
 	private CineWorldService cineworldService;
 	
 	//private Movie movie;
@@ -67,7 +66,7 @@ public class FilmDetailsActivity extends Activity {
 		setContentView( R.layout.film_details );
 		
 		// Bind services.
-		bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
+		//bindService( new Intent(this, TmdbService.class), serviceConn, BIND_AUTO_CREATE);
 		bindService( new Intent(this, CineWorldService.class), cineworldServiceConn, BIND_AUTO_CREATE);
 		
 		String stillUrl = getIntent().getStringExtra("poster_url"); 
@@ -110,7 +109,7 @@ public class FilmDetailsActivity extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		
-		unbindService(serviceConn);
+		//unbindService(serviceConn);
 		unbindService(cineworldServiceConn);
 	}
 	
@@ -166,7 +165,7 @@ public class FilmDetailsActivity extends Activity {
 		showLoaderDialog();
 	}
 	
-	private ServiceConnection serviceConn = new ServiceConnection() {
+	/*private ServiceConnection serviceConn = new ServiceConnection() {
 		
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -179,7 +178,7 @@ public class FilmDetailsActivity extends Activity {
 			tmdbService = null;
 		}
 		
-	};
+	};*/
 	
 	private ServiceConnection cineworldServiceConn = new ServiceConnection() {
 
@@ -242,7 +241,6 @@ public class FilmDetailsActivity extends Activity {
 					if( mLoaderDialog != null && mLoaderDialog.isShowing() )
 						mLoaderDialog.dismiss();
 					
-					mog.debug("received film cinema data");
 					final CinemaList cinemaList = (CinemaList) intent.getSerializableExtra("data");
 					AlertDialog.Builder builder = new AlertDialog.Builder(context);
 					builder.setTitle("Choose a cinema"); //TODO	- move this string

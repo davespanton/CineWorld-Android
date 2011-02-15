@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+
 import android.util.Log;
 /**
 * HTTP Request class
@@ -75,15 +76,17 @@ public class HttpRequest {
                 StringBuffer buff = new StringBuffer();
                 try {
                         URL url = new URL(sUrl);
-                        //TODO bug when connection doesn't open...
-                        URLConnection con = url.openConnection();
+                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
                         con.setConnectTimeout(timeout);
+                        
+                        //TODO check http response code.
+                        
                         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                         while ((str = in.readLine()) != null) {
                                 buff.append(str);
-                                Log.i("Buffer says: ", str);
                         }
                         ret.content = buff.toString();
+                        
                         //get headers
                         Map<String, List<String>> headers = con.getHeaderFields();
                         Set<Entry<String, List<String>>> hKeys = headers.entrySet();
