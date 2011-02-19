@@ -29,14 +29,10 @@ import com.davespanton.cineworld.R;
 import com.davespanton.cineworld.data.Film;
 import com.davespanton.cineworld.data.FilmList;
 import com.davespanton.cineworld.services.CineWorldService;
-import com.google.code.microlog4android.Logger;
-import com.google.code.microlog4android.LoggerFactory;
 
 public class FilmListActivity extends ListActivity {
 
 	public static final int CONTEXT_VIEW_INFO = 0;
-	
-	private static final Logger mog = LoggerFactory.getLogger(FilmListActivity.class);
 	
 	public enum Types { ALL, CINEMA };
 	
@@ -191,7 +187,7 @@ public class FilmListActivity extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			if( mLoaderDialog != null && mLoaderDialog.isShowing() )
 				mLoaderDialog.dismiss();
-			mog.debug("Received an error broadcast");
+			
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
 			
 			builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.try_again))

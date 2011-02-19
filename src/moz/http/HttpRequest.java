@@ -69,39 +69,38 @@ public class HttpRequest {
         *
         * @param sUrl
         * @return
+         * @throws IOException 
         */
-        public static HttpData get(String sUrl) {
-                HttpData ret = new HttpData();
-                String str;
-                StringBuffer buff = new StringBuffer();
-                try {
-                        URL url = new URL(sUrl);
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                        con.setConnectTimeout(timeout);
+        public static HttpData get(String sUrl) throws IOException {
+        	HttpData ret = new HttpData();
+            String str;
+            StringBuffer buff = new StringBuffer();
+                
+            URL url = new URL(sUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setConnectTimeout(timeout);
                         
-                        //TODO check http response code.
+            //TODO check http response code.
                         
-                        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                        while ((str = in.readLine()) != null) {
-                                buff.append(str);
-                        }
-                        ret.content = buff.toString();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            
+            while ((str = in.readLine()) != null) {
+            	buff.append(str);
+            }
+                
+            ret.content = buff.toString();
                         
-                        //get headers
-                        Map<String, List<String>> headers = con.getHeaderFields();
-                        Set<Entry<String, List<String>>> hKeys = headers.entrySet();
-                        for (Iterator<Entry<String, List<String>>> i = hKeys.iterator(); i.hasNext();) {
-                                Entry<String, List<String>> m = i.next();
- 
-                                Log.w("HEADER_KEY", m.getKey() + "");
-                                ret.headers.put(m.getKey(), m.getValue().toString());
-                                if (m.getKey().equals("set-cookie"))
-                                ret.cookies.put(m.getKey(), m.getValue().toString());
-                        }
-                } catch (Exception e) {
-                        Log.e("HttpRequest", e.toString());
-                }
-                return ret;
+            //get headers
+            Map<String, List<String>> headers = con.getHeaderFields();
+            Set<Entry<String, List<String>>> hKeys = headers.entrySet();
+            for (Iterator<Entry<String, List<String>>> i = hKeys.iterator(); i.hasNext();) {
+                	Entry<String, List<String>> m = i.next();
+                ret.headers.put(m.getKey(), m.getValue().toString());
+                if (m.getKey().equals("set-cookie"))
+                	ret.cookies.put(m.getKey(), m.getValue().toString());
+            }
+            
+            return ret;
         }
  
  

@@ -89,7 +89,7 @@ public class Main extends Activity {
     	bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
        
     	loaderDialog = ProgressDialog.show( Main.this, "",  getString(R.string.loading_data) );
-    }
+    } 
     
 	@Override
 	protected void onDestroy() {

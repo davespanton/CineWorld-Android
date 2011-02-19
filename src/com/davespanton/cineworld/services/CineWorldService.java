@@ -1,18 +1,26 @@
 package com.davespanton.cineworld.services;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
-
-import org.json.JSONArray;
-import org.json.JSONException; 
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import moz.http.HttpData;
 import moz.http.HttpRequest;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Binder;
+import android.os.IBinder;
+import android.os.Parcelable;
 
 import com.davespanton.cineworld.ApiKey;
 import com.davespanton.cineworld.data.CineVO;
@@ -25,13 +33,6 @@ import com.davespanton.cineworld.data.Performance;
 import com.davespanton.cineworld.data.PerformanceList;
 import com.google.code.microlog4android.Logger;
 import com.google.code.microlog4android.LoggerFactory;
-
-import android.app.Service;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Binder;
-import android.os.IBinder;
-import android.os.Parcelable;
 
 public class CineWorldService extends Service {
 	
@@ -47,6 +48,7 @@ public class CineWorldService extends Service {
 	private final Binder binder = new LocalBinder();
 	
 	public enum Ids { FILM, CINEMA, CINEMA_FILM, FILM_CINEMA, FILM_DATES, DATE_TIMES, WEEK_TIMES };
+	public enum Errors { GENERAL, NETWORK };
 	
 	// Cinema data
 	private CinemaList mPCinemaData;
@@ -211,7 +213,7 @@ public class CineWorldService extends Service {
 	protected void processResult( FetchDataTask fetch, HttpData result ) {
 		
 		Intent intent = new Intent( CINEWORLD_DATA_LOADED );
-		boolean error = false;
+		Errors error = null;
 		
 		switch( fetch.id )
 		{
@@ -230,15 +232,14 @@ public class CineWorldService extends Service {
         				}
         			}
         		} catch( JSONException e ) {
-                	e.printStackTrace();
                 	mog.error( "JSONException for CINEMA. " + result.content );
-                	error = true;
+                	error = Errors.GENERAL;
                 } catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
                 
-                if( !error ) {
+                if( error == null ) {
                 	cinemaDataReady = true;
                 	intent.putExtra("data", (Parcelable) mPCinemaData);
                 }
@@ -260,15 +261,14 @@ public class CineWorldService extends Service {
         				}
         			}
         		} catch( JSONException e ) {
-					e.printStackTrace();
 					mog.error( "JSONException for FILM. " + result.content );
-					error = true;
-                } catch (NullPointerException e) {
+					error = Errors.GENERAL;
+                } catch( NullPointerException e ) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
 		
-				if( !error ) {
+				if( error == null ) {
 					intent.putExtra("data", (Parcelable) mPFilmData);
 					filmDataReady = true;
 				}
@@ -291,15 +291,14 @@ public class CineWorldService extends Service {
         			}
 					
 				} catch (JSONException e) {
-					e.printStackTrace();
 					mog.error( "JSONException for CINEMA_FILM. " + result.content );
-					error = true;
+					error = Errors.GENERAL;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
 				
-				if( !error ) {
+				if( error == null ) {
 					intent.putExtra("data", (Parcelable) cinemaFilmData);
 					mCinemaFilmData.put(fetch.data.toString(), cinemaFilmData);
 				}
@@ -318,16 +317,15 @@ public class CineWorldService extends Service {
 							filmCinemaData.add(c);
 						}
 					}
-				} catch (JSONException e) {
-					e.printStackTrace();
+				} catch ( JSONException e ) {
 					mog.error( "JSONException for FILM_CINEMA. " + result.content );
-					error = true;
-				} catch (NullPointerException e) {
+					error = Errors.GENERAL;
+				} catch ( NullPointerException e ) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
 				
-				if( !error ) {
+				if( error == null ) {
 					intent.putExtra("data", (Parcelable) filmCinemaData);
 					mFilmCinemaData.put(fetch.data.toString(), filmCinemaData);
 				}
@@ -344,12 +342,11 @@ public class CineWorldService extends Service {
 						filmDates.add( jsonFilmDates.getString(i) );
 					}
 				} catch (JSONException e) {
-					e.printStackTrace();
 					mog.error(e.getMessage());
-					error = true;
+					error = Errors.GENERAL;
 				}
 				
-				if( !error ) {
+				if( error == null ) {
 					intent.putStringArrayListExtra("data", filmDates);
 					mFilmDatesData.put(fetch.data.toString(), filmDates);
 				}
@@ -371,15 +368,14 @@ public class CineWorldService extends Service {
 					
 					
 				} catch (JSONException e) {
-					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
-					error = true;
+					error = Errors.GENERAL;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
 				
-				if( !error ) {
+				if( error == null ) {
 					intent.putExtra("data", (Parcelable) filmPerformanceData);
 					mPerformanceData.put(fetch.data, filmPerformanceData);
 				}
@@ -401,18 +397,17 @@ public class CineWorldService extends Service {
 					}
 				//TODO	iron out error handling here...
 				} catch (JSONException e) {
-					e.printStackTrace();
 					mog.error( "JSONException for DATE_TIMES. " + result.content );
-					error = true;
+					error = Errors.GENERAL;
 				} catch (NullPointerException e) {
 					mog.error( "NullPointer in CineworldService." + result.content);
-					error = true;
+					error = Errors.GENERAL;
 				}
 				
 				String[] idData = fetch.data.toString().split(",");
 				String parentId = idData[1] + idData[2];
 				MultiPerformanceList multiPerformanceList = mMultiPerformanceData.get(parentId);
-				if( error || filmPerformanceData.size() == 0 )
+				if( error != null || filmPerformanceData.size() == 0 )
 					multiPerformanceList.add(null);
 				else
 					multiPerformanceList.add(filmPerformanceData);
@@ -425,57 +420,28 @@ public class CineWorldService extends Service {
 				break;
 		}
 		
-		if( !error ) {
+		if( error == null ) {
 			intent.putExtra("id", fetch.id);
 			sendBroadcast(intent);
 		}
 		else {
-			Intent i = new Intent( CINEWORLD_ERROR );
-			i.putExtra("id", fetch.id);
-			sendBroadcast( i );
+			processError(Errors.GENERAL);
 		}
-			
+		
+		fetch.destroy();
 	}
 	
-	/*private void updateFilmsForCinema() {
-		String id = mCurrentCinema.getId();
-		
-		FetchDataTask fdt = new FetchDataTask();
-		fdt.id = Ids.CINEMA_FILM;
-		fdt.execute( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-		mog.debug( BASE_URL + "films?key=" + ApiKey.KEY + "&full=true&cinema=" + id );
-	}*/
+	protected void processError( Errors error ) {
+		Intent i = new Intent( CINEWORLD_ERROR );
+		sendBroadcast( i );
+	}
 	
-	/*private void updateDatesForFilm() {
-		if( mCurrentCinema == null || mCurrentFilm == null )
-			return;
-		
-		mFilmDates = null;
-		mFilmDatesData = null;
-		
-		String cinemaId = mCurrentCinema.getId();
-		String filmId = mCurrentFilm.getEdi();
-		
-		FetchDataTask fdt = new FetchDataTask();
-		fdt.id = Ids.FILM_DATES;
-		fdt.execute( BASE_URL + "dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
-		//Log.d( "Cineworld Request", BASE_URL + "dates?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId);
-	}*/
-	
-	/*private void updatePerformancesForFilm( String date, String cinemaId, String filmId ) {
-		if( mCurrentCinema == null || mCurrentFilm == null )
-			return;
-		
-		mPFilmPerformanceData = null;
-		
-		//String cinemaId = mCurrentCinema.getId();
-		//String filmId = mCurrentFilm.getEdi();
-		
-		FetchDataTask fdt = new FetchDataTask();
-		fdt.id = Ids.DATE_TIMES;
-		fdt.execute( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-		mog.debug( BASE_URL + "performances?key=" + ApiKey.KEY + "&cinema=" + cinemaId + "&film=" + filmId + "&date=" + date);
-	}*/
+	//TODO flesh out.
+	protected void processError( Exception error ) {
+		if( IOException.class.isInstance(error) ) {
+			processError(Errors.NETWORK);
+		}
+	}
 	
 	private Film getFilmFromJSONObject( JSONObject jsonObject ) {
 		
@@ -572,6 +538,8 @@ public class CineWorldService extends Service {
 		
 		private CineVO dataVO;
 		
+		private Exception error = null;
+		
 		public CineVO getDataVO() {
 			return dataVO;
 		}
@@ -585,12 +553,26 @@ public class CineWorldService extends Service {
 			super();
 			this.dataVO = dataVO;
 		}
+		
+		public void destroy() {
+			cancel(true);
+			id = null;
+			data = null;
+			dataVO = null;
+		}
 
 		@Override
 		protected HttpData doInBackground(String... url) {
 
 			HttpRequest.timeout = 20000;
-			HttpData data = HttpRequest.get( url[0] );
+			HttpData data = null;
+			
+			try {
+				data = HttpRequest.get( url[0] );
+			}
+			catch(Exception e) {
+				error = e;
+			}
 			
 			return data;
 		}
@@ -599,6 +581,11 @@ public class CineWorldService extends Service {
 		protected void onPostExecute(HttpData result) {
 			
 			super.onPostExecute(result);
+			
+			if( error != null ) {
+				processError(error);
+				return;
+			}
 			
 			processResult( this, result );
 		}

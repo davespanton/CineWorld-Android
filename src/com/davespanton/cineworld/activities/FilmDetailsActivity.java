@@ -34,12 +34,8 @@ import com.davespanton.cineworld.data.MultiPerformanceList;
 import com.davespanton.cineworld.services.CineWorldService;
 import com.davespanton.cineworld.services.TmdbService;
 import com.davespanton.cineworld.services.CineWorldService.Ids;
-import com.google.code.microlog4android.Logger;
-import com.google.code.microlog4android.LoggerFactory;
 
 public class FilmDetailsActivity extends Activity {
-	
-	private Logger mog = LoggerFactory.getLogger( FilmDetailsActivity.class );
 	
 	//private TmdbService tmdbService;
 	private CineWorldService cineworldService;
@@ -265,7 +261,6 @@ public class FilmDetailsActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			if( mLoaderDialog != null && mLoaderDialog.isShowing() )
 				mLoaderDialog.dismiss();
-			mog.debug("An error has occured.");
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
 			
