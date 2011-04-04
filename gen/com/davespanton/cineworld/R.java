@@ -47,29 +47,25 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f040000;
-        public static final int current_cinema=0x7f040003;
-        public static final int current_film=0x7f040004;
-        public static final int date_list=0x7f040015;
-        public static final int dates_times=0x7f04000e;
-        public static final int film_details=0x7f040010;
-        public static final int loading_data=0x7f04000c;
-        public static final int no_current_cinema=0x7f040005;
-        public static final int no_current_film=0x7f040006;
-        public static final int no_information=0x7f04000a;
-        public static final int no_network=0x7f040016;
-        public static final int okay=0x7f040008;
-        public static final int overview=0x7f040009;
-        public static final int performance_times=0x7f04000f;
-        public static final int please_try_again=0x7f040012;
-        public static final int quit=0x7f040017;
-        public static final int rating=0x7f04000b;
-        public static final int something_wrong=0x7f040011;
-        public static final int tmdb_more_info=0x7f04000d;
-        public static final int try_again=0x7f040013;
-        public static final int try_again_later=0x7f040014;
+        public static final int date_list=0x7f040011;
+        public static final int dates_times=0x7f04000a;
+        public static final int film_details=0x7f04000c;
+        public static final int loading_data=0x7f040008;
+        public static final int no_information=0x7f040006;
+        public static final int no_network=0x7f040012;
+        public static final int okay=0x7f040004;
+        public static final int overview=0x7f040005;
+        public static final int performance_times=0x7f04000b;
+        public static final int please_try_again=0x7f04000e;
+        public static final int quit=0x7f040013;
+        public static final int rating=0x7f040007;
+        public static final int something_wrong=0x7f04000d;
+        public static final int tmdb_more_info=0x7f040009;
+        public static final int try_again=0x7f04000f;
+        public static final int try_again_later=0x7f040010;
         public static final int view_cinemas=0x7f040001;
         public static final int view_films=0x7f040002;
-        public static final int view_info=0x7f040007;
+        public static final int view_info=0x7f040003;
     }
     public static final class style {
         public static final int Button=0x7f050000;

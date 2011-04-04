@@ -2,12 +2,12 @@
 <resources>
     
     <string name="app_name">CineWorld</string>
-<string name="view_cinemas">View Cinemas</string><string name="view_films">View Films</string>
+<string name="view_cinemas">View cinemas</string><string name="view_films">View films</string>
 
-<string name="current_cinema">The current cinema is:</string><string name="current_film">The current film is:</string>
 
-<string name="no_current_cinema">You have not selected a cinema</string>
-<string name="no_current_film">You have not selected a flim</string>
+
+
+
 <string name="view_info">View information</string>
 <string name="okay">Okay</string>
 

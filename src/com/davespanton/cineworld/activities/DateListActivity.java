@@ -5,8 +5,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -39,6 +42,21 @@ public class DateListActivity extends ListActivity {
 		
 		mMultiPerformanceList = (MultiPerformanceList) getIntent().getParcelableExtra("data");
 		mog.debug("creating datelist from: " + Integer.toString(mMultiPerformanceList.size()));
+		if(mMultiPerformanceList.size() == 0) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage("No showings in the next 7 days");
+			
+			builder.setPositiveButton(getString(R.string.okay), new OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					finish();	
+				}
+			});
+			
+			AlertDialog alert = builder.create();
+			alert.show();
+		}
+		
 		setListAdapter(new DateListAdapter(mMultiPerformanceList));
 	}
 		
