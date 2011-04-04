@@ -21,6 +21,10 @@
 <string name="performance_times">Performance times</string>
 <string name="film_details">Film details</string>
 <string name="something_wrong">Something seems to have gone wrong.</string>
-<string name="try_again">Please try again.</string>
-<string name="date_list">Dates and times.</string>
+<string name="please_try_again">Please try again.</string><string name="try_again">Try again</string>
+<string name="try_again_later">Please try again later.</string><string name="date_list">Dates and times.</string>
+<string name="no_network">Couldn\'t get a connection to the internet.</string>
+
+<string name="quit">Quit</string>
+
 </resources>

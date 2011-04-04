@@ -69,7 +69,7 @@ public class HttpRequest {
         *
         * @param sUrl
         * @return
-         * @throws IOException 
+        * @throws IOException 
         */
         public static HttpData get(String sUrl) throws IOException {
         	HttpData ret = new HttpData();

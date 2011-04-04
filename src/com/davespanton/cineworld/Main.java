@@ -10,10 +10,12 @@ import com.google.code.microlog4android.config.PropertyConfigurator;
 import com.google.code.microlog4android.format.PatternFormatter;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -37,11 +39,15 @@ public class Main extends Activity {
 		
 	private CineWorldService cineWorldService = null;
 	
-	private ProgressDialog loaderDialog;
+	private ProgressDialog mLoaderDialog;
+	private AlertDialog mErrorAlert;
 	
 	protected void onConneted() {
 		if( checkDataReady() )
-			loaderDialog.dismiss();
+			mLoaderDialog.dismiss();
+		else {
+			makeRequests(false);
+		}
 	}
 	
 	/** Called when the activity is first created. */
@@ -88,7 +94,7 @@ public class Main extends Activity {
         
     	bindService( new Intent(this, CineWorldService.class), service, BIND_AUTO_CREATE);
        
-    	loaderDialog = ProgressDialog.show( Main.this, "",  getString(R.string.loading_data) );
+    	mLoaderDialog = ProgressDialog.show( Main.this, "",  getString(R.string.loading_data) );
     } 
     
 	@Override
@@ -105,11 +111,11 @@ public class Main extends Activity {
 		
 		super.onPause();
 		
-		if( loaderDialog != null && loaderDialog.isShowing() )
-			loaderDialog.dismiss();
+		if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+			mLoaderDialog.dismiss();
 		
 		unregisterReceiver(dataReceiver);
-		unregisterReceiver(errorReceiver);
+		unregisterReceiver(errorReceiver); 
 	}
 
 	@Override
@@ -121,10 +127,10 @@ public class Main extends Activity {
 		registerReceiver(dataReceiver, new IntentFilter(CineWorldService.CINEWORLD_DATA_LOADED));
 		registerReceiver(errorReceiver, new IntentFilter(CineWorldService.CINEWORLD_ERROR));
 		
-		if( checkDataReady() && loaderDialog.isShowing() )
-			loaderDialog.dismiss();
-		else if( !checkDataReady() && !loaderDialog.isShowing()) {
-			loaderDialog = ProgressDialog.show(this, "", getString(R.string.loading_data));
+		if( checkDataReady() && mLoaderDialog.isShowing() )
+			mLoaderDialog.dismiss();
+		else if( !checkDataReady() && !mLoaderDialog.isShowing()) {
+			mLoaderDialog = ProgressDialog.show(this, "", getString(R.string.loading_data));
 		}
 	}
 
@@ -159,6 +165,14 @@ public class Main extends Activity {
 			return false;
 		else
 			return cineWorldService.getCinemaDataReady() && cineWorldService.getFilmDataReady();
+	}
+	
+	private void makeRequests( Boolean showLoader ) {
+		if(showLoader)
+			mLoaderDialog = ProgressDialog.show( Main.this, "",  getString(R.string.loading_data) );
+		
+		cineWorldService.requestCinemaList();
+		cineWorldService.requestFilmList();
 	}
 	
 	
@@ -202,10 +216,10 @@ public class Main extends Activity {
 				case FILM:
 					mog.debug( id.toString() + " received data ready " + Boolean.toString(checkDataReady()) );
 					if( checkDataReady()) 
-						loaderDialog.dismiss();
+						mLoaderDialog.dismiss();
 					break;
 				case CINEMA_FILM:
-						loaderDialog.dismiss();
+						mLoaderDialog.dismiss();
 						startFilmActivity( 	FilmListActivity.Types.CINEMA );
 					break;
 			}
@@ -218,8 +232,44 @@ public class Main extends Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			
-			//if( loaderDialog != null && loaderDialog.isShowing() )
-			//	TODO	alert user of error
+			mog.debug("Error recieved in Main");
+			if( mLoaderDialog != null && mLoaderDialog.isShowing() )
+				mLoaderDialog.dismiss();
+			
+			if( mErrorAlert != null && mErrorAlert.isShowing() )
+				return; //leave any current alert showing
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			
+			switch( (CineWorldService.Errors) intent.getSerializableExtra("type")) {
+				case GENERAL:
+					builder.setMessage(getString(R.string.something_wrong));
+					builder.setPositiveButton(getString(R.string.quit), new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							finish();
+						} 
+					});
+					break;
+				case NETWORK:
+					builder.setMessage(getString(R.string.no_network) + " " + getString(R.string.try_again_later));
+					builder.setPositiveButton(getString(R.string.try_again), new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							makeRequests(true);
+						}
+					});
+					builder.setNegativeButton(getString(R.string.quit), new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							finish();
+						}
+					});
+					break;
+			}
+			  
+			mErrorAlert = builder.create();
+			mErrorAlert.show();
 		}
 		
 	};

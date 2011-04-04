@@ -38,7 +38,7 @@ public class CineWorldService extends Service {
 	
 	public static final String CINEWORLD_DATA_LOADED = "com.davespanton.cineworld.services.CineWorldUpdateEvent";
 	public static final String CINEWORLD_ERROR = "com.davespanton.cineworld.services.CineWorldErrorEvent";
-		
+	
 	private static final String BASE_URL = "http://www.cineworld.co.uk/api/quickbook/";
 	
 	private static final int DATE_RANGE = 7;
@@ -76,12 +76,17 @@ public class CineWorldService extends Service {
 	private boolean filmDataReady = false;
 	
 	public void requestCinemaList() {
-		if( cinemaDataReady ) {
+		if( mPCinemaData != null ) {
 			Intent i = new Intent( CINEWORLD_DATA_LOADED );
 			i.putExtra("id", Ids.CINEMA);
 			i.putExtra("data", (Parcelable) mPCinemaData);
 			sendBroadcast(i);
-		} 
+		}
+		else {
+			FetchDataTask cinemaData = new FetchDataTask();
+			cinemaData.id = Ids.CINEMA;
+			cinemaData.execute( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
+		}
 	}
 		
 	public void requestFilmList() {
@@ -90,6 +95,11 @@ public class CineWorldService extends Service {
 			i.putExtra("id", Ids.FILM);
 			i.putExtra("data", (Parcelable) mPFilmData);
 			sendBroadcast(i);
+		}
+		else {
+			FetchDataTask filmData = new FetchDataTask();
+			filmData.id = Ids.FILM;
+			filmData.execute( "http://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true" );
 		}
 	}
 	
@@ -187,16 +197,7 @@ public class CineWorldService extends Service {
 		
 	@Override
 	public void onCreate() {
-		
 		super.onCreate();
-		
-		FetchDataTask cinemaData = new FetchDataTask();
-		cinemaData.id = Ids.CINEMA;
-		cinemaData.execute( "http://www.cineworld.co.uk/api/quickbook/cinemas?key=" + ApiKey.KEY + "&full=true" );
-		
-		FetchDataTask filmData = new FetchDataTask();
-		filmData.id = Ids.FILM;
-		filmData.execute( "http://www.cineworld.co.uk/api/quickbook/films?key=" + ApiKey.KEY + "&full=true" );
 	}
 
 	@Override
@@ -433,12 +434,13 @@ public class CineWorldService extends Service {
 	
 	protected void processError( Errors error ) {
 		Intent i = new Intent( CINEWORLD_ERROR );
+		i.putExtra("type", error);
 		sendBroadcast( i );
 	}
 	
 	//TODO flesh out.
 	protected void processError( Exception error ) {
-		if( IOException.class.isInstance(error) ) {
+		if( error instanceof IOException ) {
 			processError(Errors.NETWORK);
 		}
 	}
@@ -583,6 +585,7 @@ public class CineWorldService extends Service {
 			super.onPostExecute(result);
 			
 			if( error != null ) {
+				mog.debug("Processing an error from the http request");
 				processError(error);
 				return;
 			}

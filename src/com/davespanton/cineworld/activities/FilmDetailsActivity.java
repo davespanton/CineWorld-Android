@@ -264,8 +264,16 @@ public class FilmDetailsActivity extends Activity {
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
 			
-			builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.try_again))
-			.setPositiveButton(getString(R.string.okay), new DialogInterface.OnClickListener() {
+			switch( (CineWorldService.Errors) intent.getSerializableExtra("type")) {
+				case GENERAL:
+					builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.please_try_again));
+					break;
+				case NETWORK:
+					builder.setMessage(getString(R.string.no_network) + " " + getString(R.string.try_again_later));
+					break;
+			}
+			
+			builder.setPositiveButton(getString(R.string.okay), new DialogInterface.OnClickListener() {
 				
 				@Override
 				public void onClick(DialogInterface dialog, int which) {

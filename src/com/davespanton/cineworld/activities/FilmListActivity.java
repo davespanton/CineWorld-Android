@@ -71,6 +71,10 @@ public class FilmListActivity extends ListActivity {
 		setContentView(R.layout.films);
 		
 		type = (Types) getIntent().getSerializableExtra("type");
+		
+		if(type == Types.CINEMA) {
+			setTitle(getIntent().getStringExtra("cinemaName"));
+		}
 	}
 	
 	@Override
@@ -190,8 +194,16 @@ public class FilmListActivity extends ListActivity {
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
 			
-			builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.try_again))
-			.setPositiveButton(getString(R.string.okay), new OnClickListener() {
+			switch( (CineWorldService.Errors) intent.getSerializableExtra("type")) {
+				case GENERAL:
+					builder.setMessage(getString(R.string.something_wrong) + " " + getString(R.string.please_try_again));
+					break;
+				case NETWORK:
+					builder.setMessage(getString(R.string.no_network) + " " + getString(R.string.try_again_later));
+					break;
+			}
+			
+			builder.setPositiveButton(getString(R.string.okay), new OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					finish();	

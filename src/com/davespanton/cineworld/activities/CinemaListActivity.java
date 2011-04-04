@@ -85,7 +85,7 @@ public class CinemaListActivity extends ListActivity {
 		super.onListItemClick(l, v, position, id);
 		//cineWorldService.requestFilmListForCinema( mCinemaList.get(position).getId() );
 		//loaderDialog = ProgressDialog.show(CinemaListActivity.this, "", getString(R.string.loading_data) );
-		startFilmActivity(mCinemaList.get(position).getId());
+		startFilmActivity(mCinemaList.get(position).getId(), mCinemaList.get(position).getName());
 	}
 
 	@Override
@@ -141,10 +141,11 @@ public class CinemaListActivity extends ListActivity {
 		return alert;
 	}
 	
-	private void startFilmActivity( String cinemaId ) {
+	private void startFilmActivity( String cinemaId, String cinemaName ) {
 		Intent i = new Intent( this, FilmListActivity.class);
 		i.putExtra( "type", FilmListActivity.Types.CINEMA );
 		i.putExtra( "cinemaId", cinemaId);
+		i.putExtra( "cinemaName", cinemaName);
 		startActivity(i);
 	}
 	
